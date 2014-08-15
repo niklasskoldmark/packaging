@@ -280,18 +280,18 @@
     </choice>
     <choice id='MotionContentGroupings' customLocation='/Library/Application Support/Final Cut Studio/Motion/' customLocationAllowAlternateVolumes='YES' start_selected='true' title='TITLE_MOTIONCONTENT' description='DESCRIPTION_MOTIONCONTENT'></choice>
     <choice id="MotionContentTemplates" title="TITLE_MOTIONCONTENTTEMPLATES" start_selected='true' description="DESCRIPTION_MOTIONCONTENTTEMPLATES">
-        <pkg-ref id='com.apple.pkg.MotionContentTemplates' auth='Root' installKBytes="1738905" version="1.5.0.3140000.1590">x-disc://Motion%20Content%201/Installer/Packages/MotionContentTemplates.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.MotionContentTemplates' auth='Root' installKBytes="1738905" version="1.5.0.3140000.1590">file:../Packages/MotionContentTemplates.pkg</pkg-ref>
     </choice>
     <choice id="MotionInstalledMedia" title="TITLE_MOTIONINSTALLEDMEDIA" start_selected='true' description="DESCRIPTION_MOTIONINSTALLEDMEDIA">
-        <pkg-ref id='com.apple.pkg.MotionInstalledMedia1' auth='Root' installKBytes="2225353" version="1.5.0.3140000.1590">x-disc://Motion%20Content%201/Installer/Packages/MotionInstalledMedia1.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.MotionInstalledMedia1' auth='Root' installKBytes="2225353" version="1.5.0.3140000.1590">file:../Packages/MotionInstalledMedia1.pkg</pkg-ref>
     </choice>
     <choice id="MotionInstalledMedia2" title="TITLE_MOTIONINSTALLEDMEDIA2" selected="!system.env.COMMAND_LINE_INSTALL &amp;&amp; (choices.MotionInstalledMedia.selected || choices.MotionContentTemplates.selected)" start_visible='false'>
-        <pkg-ref id='com.apple.pkg.MotionInstalledMedia2' auth='Root' installKBytes="4132134" version="1.5.0.3140000.1590">x-disc://Motion%20Content%201/Installer/Packages/MotionInstalledMedia2.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.MotionInstalledMedia2' auth='Root' installKBytes="4132134" version="1.5.0.3140000.1590">file:../Packages/MotionInstalledMedia2.pkg</pkg-ref>
     </choice>
     <choice id="MotionLiveFonts" title="TITLE_MOTIONLIVEFONTS" customLocation='/Library/Application Support/' customLocationAllowAlternateVolumes='YES' start_selected='true' description="DESCRIPTION_MOTIONLIVEFONTS">
-        <pkg-ref id='com.apple.pkg.MotionSeriesLiveFonts' auth='Root' installKBytes="1252062" version="4.0.0.3140000.1590">x-disc://Motion%20Content%202/Packages/MotionSeriesLiveFonts.pkg</pkg-ref>
-        <pkg-ref id='com.apple.pkg.CollectorsSeriesLiveFonts' auth='Root' installKBytes="1874246" version="4.0.0.3140000.1590">x-disc://Motion%20Content%202/Packages/CollectorsSeriesLiveFonts.pkg</pkg-ref>
-        <pkg-ref id='com.apple.pkg.ProSeriesLiveFonts' auth='Root' installKBytes="5151537" version="4.0.0.3140000.1590">x-disc://Motion%20Content%202/Packages/ProSeriesLiveFonts.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.MotionSeriesLiveFonts' auth='Root' installKBytes="1252062" version="4.0.0.3140000.1590">file:../Packages/MotionSeriesLiveFonts.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.CollectorsSeriesLiveFonts' auth='Root' installKBytes="1874246" version="4.0.0.3140000.1590">file:../Packages/CollectorsSeriesLiveFonts.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.ProSeriesLiveFonts' auth='Root' installKBytes="5151537" version="4.0.0.3140000.1590">file:../Packages/ProSeriesLiveFonts.pkg</pkg-ref>
     </choice>
     <choice id="SoundtrackProGroup" title="TITLE_SOUNDTRACK" description='DESCRIPTION_SOUNDTRACK' start_enabled='!AppHigherThanRange("1.0.0.0.0", new Array("Soundtrack Pro"))'></choice>
     <choice id="SoundtrackProApp" title="TITLE_SOUNDTRACKAPP" start_enabled='!AppHigherThanRange("1.0.0.0.0", new Array("Soundtrack Pro"))' start_selected='true' description='DESCRIPTION_SOUNDTRACKAPP'>
@@ -306,19 +306,19 @@
     </choice>
     <choice id="SoundtrackProContent" title="TITLE_SOUNDTRACKCONTENT" description='DESCRIPTION_SOUNDTRACKCONTENT' start_selected='true' customLocation='/Library/Audio/Apple Loops/Apple/' customLocationAllowAlternateVolumes='YES'></choice>
     <choice id="SoundtrackProSoundEffects" title="TITLE_SOUNDTRACKSOUNDEFFECTS" description='DESCRIPTION_SOUNDTRACKSOUNDEFFECTS' start_selected='true'>
-        <pkg-ref id='com.apple.pkg.AudioContentforSoundtrackPro1A' auth='Root' installKBytes="2929051" version="1.1.0.260000.97">x-disc://Audio%20Content%201/Installer/AudioContentforSoundtrackPro.mpkg/Contents/Packages/AudioContentforSoundtrackPro1A.pkg</pkg-ref>
-        <pkg-ref id='com.apple.pkg.AudioContentforSoundtrackPro1B' auth='Root' installKBytes="2849051" version="1.1.0.260000.97">x-disc://Audio%20Content%201/Installer/AudioContentforSoundtrackPro.mpkg/Contents/Packages/AudioContentforSoundtrackPro1B.pkg</pkg-ref>
-        <pkg-ref id='com.apple.pkg.AudioContentforSoundtrackPro1C' auth='Root' installKBytes="2616500" version="1.1.0.260000.97">x-disc://Audio%20Content%201/Installer/AudioContentforSoundtrackPro.mpkg/Contents/Packages/AudioContentforSoundtrackPro1C.pkg</pkg-ref>
-        <pkg-ref id='com.apple.pkg.AudioContentforSoundtrackPro2A' auth='Root' installKBytes="2941592" version="1.1.0.260000.97">x-disc://Audio%20Content%202/Installer/AudioContentforSoundtrackPro2A.pkg</pkg-ref>
-        <pkg-ref id='com.apple.pkg.AudioContentforSoundtrackPro2B' auth='Root' installKBytes="2956582" version="1.1.0.260000.97">x-disc://Audio%20Content%202/Installer/AudioContentforSoundtrackPro2B.pkg</pkg-ref>
-        <pkg-ref id='com.apple.pkg.AudioContentforSoundtrackPro3' auth='Root' installKBytes="2033642" version="1.1.0.260000.97">x-disc://Audio%20Content%202/Installer/AudioContentforSoundtrackPro3.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.AudioContentforSoundtrackPro1A' auth='Root' installKBytes="2929051" version="1.1.0.260000.97">file:../Packages/AudioContentforSoundtrackPro1A.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.AudioContentforSoundtrackPro1B' auth='Root' installKBytes="2849051" version="1.1.0.260000.97">file:../Packages/AudioContentforSoundtrackPro1B.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.AudioContentforSoundtrackPro1C' auth='Root' installKBytes="2616500" version="1.1.0.260000.97">file:../Packages/AudioContentforSoundtrackPro1C.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.AudioContentforSoundtrackPro2A' auth='Root' installKBytes="2941592" version="1.1.0.260000.97">file:../Packages/AudioContentforSoundtrackPro2A.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.AudioContentforSoundtrackPro2B' auth='Root' installKBytes="2956582" version="1.1.0.260000.97">file:../Packages/AudioContentforSoundtrackPro2B.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.AudioContentforSoundtrackPro3' auth='Root' installKBytes="2033642" version="1.1.0.260000.97">file:../Packages/AudioContentforSoundtrackPro3.pkg</pkg-ref>
     </choice>
     <choice id="SoundtrackProMusicBeds" title="TITLE_SOUNDTRACKMUSICBEDS" description='DESCRIPTION_SOUNDTRACKMUSICBEDS' start_selected='true'>
-        <pkg-ref id='com.apple.pkg.AudioContentforSoundtrackPro5A' auth='Root' installKBytes="3001525" version="1.1.0.260000.97">x-disc://Audio%20Content%203/Installer/AudioContentforSoundtrackPro5A.pkg</pkg-ref>
-        <pkg-ref id='com.apple.pkg.AudioContentforSoundtrackPro5B' auth='Root' installKBytes="2860639" version="1.1.0.260000.97">x-disc://Audio%20Content%203/Installer/AudioContentforSoundtrackPro5B.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.AudioContentforSoundtrackPro5A' auth='Root' installKBytes="3001525" version="1.1.0.260000.97">file:../Packages/AudioContentforSoundtrackPro5A.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.AudioContentforSoundtrackPro5B' auth='Root' installKBytes="2860639" version="1.1.0.260000.97">file:../Packages/AudioContentforSoundtrackPro5B.pkg</pkg-ref>
     </choice>
     <choice id="SoundtrackProMusicLoops" title="TITLE_SOUNDTRACKMUSICLOOPS" description='DESCRIPTION_SOUNDTRACKMUSICLOOPS' start_selected='true'>
-        <pkg-ref id='com.apple.pkg.AudioContentforSoundtrackPro7' auth='Root' installKBytes="1638189" version="1.1.0.260000.97">x-disc://Audio%20Content%203/Installer/AudioContentforSoundtrackPro7.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.AudioContentforSoundtrackPro7' auth='Root' installKBytes="1638189" version="1.1.0.260000.97">file:../Packages/AudioContentforSoundtrackPro7.pkg</pkg-ref>
     </choice>
     <choice id="Compressor" enabled="!AppHigherThanRange(&quot;1.0.0.0.0&quot;, new Array(&quot;Compressor&quot;)) &amp;&amp; !choices.SoundtrackProApp.selected &amp;&amp; !choices.DSPApp.selected &amp;&amp; !choices.FCPApp.selected &amp;&amp; !choices.MotionApp.selected" selected="(my.choice.selected || choices.SoundtrackProApp.selected || choices.DSPApp.selected || choices.FCPApp.selected || choices.MotionApp.selected) &amp;&amp; AppRangeOrNotPresent(&quot;1.0.0.0.0&quot;, &quot;3.5.1.0.0&quot;, new Array(&quot;Compressor&quot;))" title="TITLE_COMPRESSOR" tooltip='TOOLTIP_COMPRESSORREQ' description='DESCRIPTION_COMPRESSOR'>
         <pkg-ref id='com.apple.pkg.Compressor' auth='Root' installKBytes="17126" version="3.5.0.3200000.1609">file:../Packages/Compressor.pkg</pkg-ref>
@@ -336,17 +336,17 @@
     </choice>
     <choice id="NTSCTemplates" title="TITLE_NTSCTEMPLATES" start_selected='true' description='DESCRIPTION_NTSCTEMPLATES'></choice>
     <choice id="HDDVDNTSC" title="TITLE_HDDVDNTSC" start_selected='true' description='DESCRIPTION_HDDVDNTSC'>
-        <pkg-ref id='com.apple.pkg.HDDVDNTSC' auth='Root' installKBytes="1955771" version="1.0.0.170000.68">x-disc://DVD%20Studio%20Pro%20Content/Installer/DVDStudioProContent.mpkg/Contents/Packages/HDDVDNTSC.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.HDDVDNTSC' auth='Root' installKBytes="1955771" version="1.0.0.170000.68">file:../Packages/HDDVDNTSC.pkg</pkg-ref>
     </choice>
     <choice id="HDDVDPAL" title="TITLE_HDDVDPAL" start_selected='true' description='DESCRIPTION_HDDVDPAL'>
-        <pkg-ref id='com.apple.pkg.HDDVDPAL' auth='Root' installKBytes="1937974" version="1.0.0.170000.68">x-disc://DVD%20Studio%20Pro%20Content/Installer/DVDStudioProContent.mpkg/Contents/Packages/HDDVDPAL.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.HDDVDPAL' auth='Root' installKBytes="1937974" version="1.0.0.170000.68">file:../Packages/HDDVDPAL.pkg</pkg-ref>
     </choice>
     <choice id="PALTemplates" title="TITLE_PALTEMPLATES" start_selected='true' description='DESCRIPTION_PALTEMPLATES'></choice>
     <choice id="SDDVDNTSC" title="TITLE_SDDVDNTSC" start_selected='true' description='DESCRIPTION_SDDVDNTSC'>
-        <pkg-ref id='com.apple.pkg.SDDVDNTSC' auth='Root' installKBytes="2576723" version="1.0.0.170000.68">x-disc://DVD%20Studio%20Pro%20Content/Installer/DVDStudioProContent.mpkg/Contents/Packages/SDDVDNTSC.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.SDDVDNTSC' auth='Root' installKBytes="2576723" version="1.0.0.170000.68">file:../Packages/SDDVDNTSC.pkg</pkg-ref>
     </choice>
     <choice id="SDDVDPAL" title="TITLE_SDDVDPAL" start_selected='true' description='DESCRIPTION_SDDVDPAL'>
-        <pkg-ref id='com.apple.pkg.SDDVDPAL' auth='Root' installKBytes="2413788" version="1.0.0.170000.68">x-disc://DVD%20Studio%20Pro%20Content/Installer/DVDStudioProContent.mpkg/Contents/Packages/SDDVDPAL.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.SDDVDPAL' auth='Root' installKBytes="2413788" version="1.0.0.170000.68">file:../Packages/SDDVDPAL.pkg</pkg-ref>
     </choice>
     <choice id="iDVDPatches" title="TITLE_IDVDPATCHES" start_enabled='true' start_selected='true' selected="my.choice.selected &amp;&amp; iDVDPresent()" description='DESCRIPTION_IDVDPATCHES'>
         <pkg-ref id='com.apple.pkg.iDVDPatches' auth='Root' installKBytes="8715" version="4.2.2.3200000.1609">file:../Packages/iDVDPatches.pkg</pkg-ref>
