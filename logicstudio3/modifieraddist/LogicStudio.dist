@@ -799,7 +799,7 @@
         <pkg-ref id='com.apple.pkg.WarpedEffects' auth='Root' installKBytes="589149" version="1.0.0.350000.567">./Contents/Packages/WarpedEffects.pkg</pkg-ref>
     </choice>
     <choice id="GB09Content" title="TITLE_GB09CONTENT" description='DESCRIPTION_GB09CONTENT'></choice>
-    <choice id="GB09Instruments" title="TITLE_GB09INSTRUMENTS" enabled="isNotDowngrade() &amp;&amp; !GB6orLater() &amp;&amp; !((choices.GB09Loops.selected &amp;&amp; choices.LogicPro.selected) || (choices.JamPack1.selected || choices.JamPackRemixTools.selected || choices.JamPackRhythmSection.selected)) " description='DESCRIPTION_GB09INSTRUMENTS'></choice>
+    <choice id="GB09Instruments" title="TITLE_GB09INSTRUMENTS" start_selected='false' enabled="isNotDowngrade() &amp;&amp; !GB6orLater() &amp;&amp; !((choices.GB09Loops.selected &amp;&amp; choices.LogicPro.selected) || (choices.JamPack1.selected || choices.JamPackRemixTools.selected || choices.JamPackRhythmSection.selected)) " description='DESCRIPTION_GB09INSTRUMENTS'></choice>
     <choice id="GB09InstrumentsProHIDDEN" title="TITLE_GB09INSTRUMENTSPRO" selected="false" start_visible="debugMode()">
         <pkg-ref id='com.apple.pkg.LogicStudioGarageBandProInstruments' auth='Root' installKBytes="1309" version="1.0.0.350000.567">./Contents/Packages/LogicStudioGarageBandProInstruments.pkg</pkg-ref>
     </choice>
