@@ -1,0 +1,944 @@
+<?xml version="1.0"?>
+<installer-gui-script minSpecVersion='1.0040'>
+    <platforms>
+        <client arch="i386,ppc"/>
+    </platforms>
+    <title>TITLE_DIST</title>
+    <welcome file='Welcome.rtf'/>
+    <readme file='Readme.rtf'/>
+    <license file='License.rtf'/>
+    <background file='background.jpg' alignment='topleft' scaling='tofit'/>
+    <options customize='always'/>
+    <options allow-external-scripts='yes'/>
+    <options mpkg='com.apple.mpkg.LogicStudio'/>
+    <script>
+	
+		function debugMode()
+		{
+			return system.files.fileExistsAtPath('/tmp/com.apple.mpkg.LogicStudio.testing');
+		}
+		
+		function isIntel()
+		{
+			var res = (system.sysctl('hw.byteorder') == '1234');
+			if( !res ){ my.choice.tooltip = system.localizedStringWithFormat('TT_INTEL'); }
+			return res;
+		}
+	
+		function FCSStudioIDExists() { return system.files.fileExistsAtPath("/Library/Application Support/ProApps/Final Cut Studio System ID"); }
+		function LStudioIDExists() { return system.files.fileExistsAtPath("/Library/Application Support/ProApps/Logic Studio System ID"); }
+
+		function GB6orLater()
+		{
+			var app = '/Applications/GarageBand.app';
+			var appBundle = system.files.bundleAtPath(app);
+			
+			if( appBundle )
+			{
+				var appVersion = GetBundleFiveTupleVersion(appBundle);
+				
+				if( appVersion &amp;&amp; (system.compareVersions(appVersion, "6.0.0.0.0") >= 0) ){ return true; }
+			}
+
+			return false;
+		}
+	
+		function EarlierQmaster()
+		{
+			var app = '/Library/Frameworks/Qmaster.framework';
+			var appBundle = system.files.bundleAtPath(app);
+			
+			if( appBundle )
+			{
+				var appVersion = GetBundleFiveTupleVersion(appBundle);
+				
+				if( appVersion &amp;&amp; (system.compareVersions(appVersion, "3.5.0.0.0") &lt;= 0) ){ return true; }
+			}
+
+			return false;
+		}
+		
+		function shouldNotInstallSTPC()
+		{
+			return EarlierQmaster() &amp;&amp; (FCSStudioIDExists() || !LStudioIDExists());
+		}
+	
+		function GarageBandThreeFilesPresent()
+		{
+			return system.files.fileExistsAtPath("/Library/Application Support/GarageBand/Apple Loops/Apple Loops for GarageBand/70s Ballad Drums 01.aif") ||
+				   system.files.fileExistsAtPath("/Library/Audio/Apple Loops/Apple/Apple Loops for GarageBand/70s Ballad Drums 01.aif");
+		}
+
+		function oldLogicPro()
+		{
+			var app = '/Applications/Logic Pro.app';
+			var appBundle = system.files.bundleAtPath(app);
+			
+			if( appBundle )
+			{
+				var appVersion = GetBundleFiveTupleVersion(appBundle);
+				
+				if( appBundle &amp;&amp; (system.compareVersions(appVersion, "7.0.0.0.0") >= 0) &amp;&amp; (system.compareVersions(appVersion, "7.2.4.0.0") &lt; 0) ){ return true; }
+			}
+
+			return false;
+		}
+	
+		function oldLogicExpress()
+		{
+			var app = '/Applications/Logic Express.app';
+			var appBundle = system.files.bundleAtPath(app);
+			
+			if( appBundle )
+			{
+				var appVersion = GetBundleFiveTupleVersion(appBundle);
+				
+				if( appBundle &amp;&amp; (system.compareVersions(appVersion, "7.0.0.0.0") >= 0) &amp;&amp; (system.compareVersions(appVersion, "7.2.4.0.0") &lt; 0) ){ return true; }
+			}
+
+			return false;
+		}
+		
+		function LogicExpress8()
+		{
+			var app = '/Applications/Logic Express.app';
+			var appBundle = system.files.bundleAtPath(app);
+			
+			if( appBundle )
+			{
+				var appVersion = GetBundleFiveTupleVersion(appBundle);
+				
+				if( appBundle &amp;&amp; (system.compareVersions(appVersion, "8.0.0.0.0") >= 0) ){ return true; }
+			}
+
+			return false;
+		}
+	
+		function JamPack1InstrumentsExists()
+		{
+			return system.files.fileExistsAtPath("/Library/Application Support/GarageBand/Instrument Library/Track Settings/Software/Woodwinds/Soprano Sax.cst");
+		}
+		
+		function JamPack1LoopsExists()
+		{
+			return system.files.fileExistsAtPath("/Library/Application Support/GarageBand/Apple Loops/Apple Loops for GarageBand Jam Pack/12 String Dream 01.aif");
+		}
+		
+		function RemixToolsInstrumentsExists()
+		{
+			return system.files.fileExistsAtPath("/Library/Application Support/GarageBand/Instrument Library/Track Settings/Software/Synth Pads/Zipper Pad.cst");
+		}
+	
+		function RemixToolsLoopsExists()
+		{
+			return system.files.fileExistsAtPath("/Library/Application Support/GarageBand/Apple Loops/Jam Pack 2 - Remix Tools/2-Step Ahead Bass.aif");
+		}
+	
+		function RhythmSectionInstrumentsExists()
+		{
+			return system.files.fileExistsAtPath("/Library/Application Support/GarageBand/Instrument Library/Track Settings/Software/Mallets/Caribbean Steel Drums.cst");
+		}
+	
+		function RhythmSectionLoopsExists()
+		{
+			return system.files.fileExistsAtPath("/Library/Application Support/GarageBand/Apple Loops/Jam Pack 3 - Rhythm Section/6-8 Acoustic Strum 01.aif");
+		}
+	
+		function OrchestralInstrumentsExists()
+		{
+			return system.files.fileExistsAtPath("/Library/Application Support/GarageBand/Instrument Library/Track Settings/Software/Woodwinds/Xtra Piccolo Flute Staccato.cst");
+		}
+		
+		function OrchestralLoopsExists()
+		{
+			return system.files.fileExistsAtPath("/Library/Audio/Apple Loops/Apple/Jam Pack 4 - Symphony Orchestra/Academy All.aif");
+		}
+		
+		function WorldMusicInstrumentsExists()
+		{
+			var defaultInstrumentPath = my.target.mountpoint + "/Library/Application Support/GarageBand/Instrument Library/";
+			var representativeInstrumentLocation = "Track Settings/Software/Bass/Mexican Guitarron.cst";
+			
+			// test default location
+			if( system.files.fileExistsAtPath(defaultInstrumentPath + representativeInstrumentLocation) )
+			{
+				return true;
+			}
+			
+			// Get custom location from PackageRegistry
+			var packageRegistryPlistPath = my.target.mountpoint + "/Library/Application Support/GarageBand/Package Registry.plist";
+			if( system.files.fileExistsAtPath(packageRegistryPlistPath) )
+			{
+				var packageRegistry = system.files.plistAtPath(packageRegistryPlistPath);
+				var prGarageBand = packageRegistry["Jam Pack World Music"];
+				
+				if( prGarageBand )
+				{
+					var prInstrumentLibrary = prGarageBand["Instrument Library"];
+					if( prInstrumentLibrary )
+					{
+						if( system.files.fileExistsAtPath(prInstrumentLibrary + "/" + representativeInstrumentLocation) )
+						{
+							return true;
+						}
+					}
+				}
+			}
+	
+			return false;
+		}
+	
+		function WorldMusicLoopsExists()
+		{
+			var defaultInstrumentPath = my.target.mountpoint + "/Library/Audio/Apple Loops/Apple/Jam Pack World Music/";
+			var representativeInstrumentLocation = "Afganistan Sand Rabab 01.aif";
+			
+			// test default location
+			if( system.files.fileExistsAtPath(defaultInstrumentPath + representativeInstrumentLocation) )
+			{
+				return true;
+			}
+			
+			// Get custom location from PackageRegistry
+			var packageRegistryPlistPath = my.target.mountpoint + "/Library/Application Support/GarageBand/Package Registry.plist";
+			if( system.files.fileExistsAtPath(packageRegistryPlistPath) )
+			{
+				var packageRegistry = system.files.plistAtPath(packageRegistryPlistPath);
+				var prGarageBand = packageRegistry["Jam Pack World Music"];
+				if( prGarageBand )
+				{
+					var prInstrumentLibrary = prGarageBand["Apple Loops Library"];
+					if( prInstrumentLibrary )
+					{
+						if( system.files.fileExistsAtPath(prInstrumentLibrary + "/" + representativeInstrumentLocation) )
+						{
+							return true;
+						}
+					}
+				}
+			}
+	
+			return false;
+		}
+
+		function VoicesInstrumentsExists()
+		{
+			var defaultInstrumentPath = my.target.mountpoint + "/Library/Application Support/GarageBand/Instrument Library/";
+			var representativeInstrumentLocation = "Track Settings/Software/Choir/Boys Chamber Ensemble.cst";
+			
+			// test default location
+			if( system.files.fileExistsAtPath(defaultInstrumentPath + representativeInstrumentLocation) )
+			{
+				return true;
+			}
+			
+			// Get custom location from PackageRegistry
+			var packageRegistryPlistPath = my.target.mountpoint + "/Library/Application Support/GarageBand/Package Registry.plist";
+			if( system.files.fileExistsAtPath(packageRegistryPlistPath) )
+			{
+				var packageRegistry = system.files.plistAtPath(packageRegistryPlistPath);
+				var prGarageBand = packageRegistry["Jam Pack Voices"];
+				
+				if( prGarageBand )
+				{
+					var prInstrumentLibrary = prGarageBand["Instrument Library"];
+					if( prInstrumentLibrary )
+					{
+						if( system.files.fileExistsAtPath(prInstrumentLibrary + "/" + representativeInstrumentLocation) )
+						{
+							return true;
+						}
+					}
+				}
+			}
+	
+			return false;
+		}
+
+		function VoicesLoopsExists()
+		{
+			var defaultInstrumentPath = my.target.mountpoint + "/Library/Audio/Apple Loops/Apple/Jam Pack Voices/Loops";
+			var representativeInstrumentLocation = "Andre Background 01.aif";
+			
+			// test default location
+			if( system.files.fileExistsAtPath(defaultInstrumentPath + representativeInstrumentLocation) )
+			{
+				return true;
+			}
+			
+			// Get custom location from PackageRegistry
+			var packageRegistryPlistPath = my.target.mountpoint + "/Library/Application Support/GarageBand/Package Registry.plist";
+			if( system.files.fileExistsAtPath(packageRegistryPlistPath) )
+			{
+				var packageRegistry = system.files.plistAtPath(packageRegistryPlistPath);
+				var prGarageBand = packageRegistry["Jam Pack Voices"];
+				if( prGarageBand )
+				{
+					var prInstrumentLibrary = prGarageBand["Apple Loops Library"];
+					if( prInstrumentLibrary )
+					{
+						if( system.files.fileExistsAtPath(prInstrumentLibrary + "/" + representativeInstrumentLocation) )
+						{
+							return true;
+						}
+					}
+				}
+			}
+	
+			return false;
+		}
+		
+		function JamPack1LoopsLS1Exists()
+		{
+			var defaultInstrumentPath = my.target.mountpoint + "/Library/Audio/Apple Loops/Apple/Jam Pack 1/";
+			var representativeInstrumentLocation = "12 String Dream 01.caf";
+			
+			// test default location
+			if( system.files.fileExistsAtPath(defaultInstrumentPath + representativeInstrumentLocation) )
+			{
+				return true;
+			}
+			
+			// Get custom location from PackageRegistry
+			var packageRegistryPlistPath = my.target.mountpoint + "/Library/Application Support/GarageBand/Package Registry.plist";
+			if( system.files.fileExistsAtPath(packageRegistryPlistPath) )
+			{
+				var packageRegistry = system.files.plistAtPath(packageRegistryPlistPath);
+				var prGarageBand = packageRegistry["Jam Pack 1"];
+				if( prGarageBand )
+				{
+					var prInstrumentLibrary = prGarageBand["Apple Loops Library"];
+					if( prInstrumentLibrary )
+					{
+						if( system.files.fileExistsAtPath(prInstrumentLibrary + "/" + representativeInstrumentLocation) )
+						{
+							return true;
+						}
+					}
+				}
+			}
+	
+			return false;
+		}
+
+		function RemixToolsLS1LoopsExists()
+		{
+			var defaultInstrumentPath = my.target.mountpoint + "/Library/Audio/Apple Loops/Apple/Jam Pack Remix Tools/";
+			var representativeInstrumentLocation = "2-Step Ahead Bass.caf";
+			
+			// test default location
+			if( system.files.fileExistsAtPath(defaultInstrumentPath + representativeInstrumentLocation) )
+			{
+				return true;
+			}
+			
+			// Get custom location from PackageRegistry
+			var packageRegistryPlistPath = my.target.mountpoint + "/Library/Application Support/GarageBand/Package Registry.plist";
+			if( system.files.fileExistsAtPath(packageRegistryPlistPath) )
+			{
+				var packageRegistry = system.files.plistAtPath(packageRegistryPlistPath);
+				var prGarageBand = packageRegistry["Jam Pack Remix Tools"];
+				if( prGarageBand )
+				{
+					var prInstrumentLibrary = prGarageBand["Apple Loops Library"];
+					if( prInstrumentLibrary )
+					{
+						if( system.files.fileExistsAtPath(prInstrumentLibrary + "/" + representativeInstrumentLocation) )
+						{
+							return true;
+						}
+					}
+				}
+			}
+	
+			return false;
+		}
+
+		function RhythmSectionLS1LoopsExists()
+		{
+			var defaultInstrumentPath = my.target.mountpoint + "/Library/Audio/Apple Loops/Apple/Jam Pack Rhythm Section/";
+			var representativeInstrumentLocation = "6-8 Acoustic Strum 01.caf";
+			
+			// test default location
+			if( system.files.fileExistsAtPath(defaultInstrumentPath + representativeInstrumentLocation) )
+			{
+				return true;
+			}
+			
+			// Get custom location from PackageRegistry
+			var packageRegistryPlistPath = my.target.mountpoint + "/Library/Application Support/GarageBand/Package Registry.plist";
+			if( system.files.fileExistsAtPath(packageRegistryPlistPath) )
+			{
+				var packageRegistry = system.files.plistAtPath(packageRegistryPlistPath);
+				var prGarageBand = packageRegistry["Jam Pack Rhythm Section"];
+				if( prGarageBand )
+				{
+					var prInstrumentLibrary = prGarageBand["Apple Loops Library"];
+					if( prInstrumentLibrary )
+					{
+						if( system.files.fileExistsAtPath(prInstrumentLibrary + "/" + representativeInstrumentLocation) )
+						{
+							return true;
+						}
+					}
+				}
+			}
+	
+			return false;
+		}
+		
+		function OrchestralLS1LoopsExists()
+		{
+			var defaultInstrumentPath = my.target.mountpoint + "/Library/Audio/Apple Loops/Apple/Jam Pack Symphony Orchestra/";
+			var representativeInstrumentLocation = "Academy All.caf";
+			
+			// test default location
+			if( system.files.fileExistsAtPath(defaultInstrumentPath + representativeInstrumentLocation) )
+			{
+				return true;
+			}
+			
+			// Get custom location from PackageRegistry
+			var packageRegistryPlistPath = my.target.mountpoint + "/Library/Application Support/GarageBand/Package Registry.plist";
+			if( system.files.fileExistsAtPath(packageRegistryPlistPath) )
+			{
+				var packageRegistry = system.files.plistAtPath(packageRegistryPlistPath);
+				var prGarageBand = packageRegistry["Jam Pack Symphony Orchestra"];
+				if( prGarageBand )
+				{
+					var prInstrumentLibrary = prGarageBand["Apple Loops Library"];
+					if( prInstrumentLibrary )
+					{
+						if( system.files.fileExistsAtPath(prInstrumentLibrary + "/" + representativeInstrumentLocation) )
+						{
+							return true;
+						}
+					}
+				}
+			}
+	
+			return false;
+		}
+		
+		function WorldMusicLS1LoopsExists()
+		{
+			var defaultInstrumentPath = my.target.mountpoint + "/Library/Audio/Apple Loops/Apple/Jam Pack World Music/";
+			var representativeInstrumentLocation = "Afganistan Sand Rabab 01.caf";
+			
+			// test default location
+			if( system.files.fileExistsAtPath(defaultInstrumentPath + representativeInstrumentLocation) )
+			{
+				return true;
+			}
+			
+			// Get custom location from PackageRegistry
+			var packageRegistryPlistPath = my.target.mountpoint + "/Library/Application Support/GarageBand/Package Registry.plist";
+			if( system.files.fileExistsAtPath(packageRegistryPlistPath) )
+			{
+				var packageRegistry = system.files.plistAtPath(packageRegistryPlistPath);
+				var prGarageBand = packageRegistry["Jam Pack World Music"];
+				if( prGarageBand )
+				{
+					var prInstrumentLibrary = prGarageBand["Apple Loops Library"];
+					if( prInstrumentLibrary )
+					{
+						if( system.files.fileExistsAtPath(prInstrumentLibrary + "/" + representativeInstrumentLocation) )
+						{
+							return true;
+						}
+					}
+				}
+			}
+	
+			return false;
+		}
+	
+		function installationCheck()
+		{
+			if( !system.env.COMMAND_LINE_INSTALL )
+			{
+				var STPCerror = "";
+				
+				if( shouldNotInstallSTPC() )
+				{
+					STPCerror = system.localizedString('ERROR_STPC');
+				}
+			
+				if( system.compareVersions(system.version.ProductVersion,"10.5.6") &lt; 0 )
+				{
+					my.result.message = system.localizedString('ERROR_OSVER');
+					my.result.type = 'Fatal';
+					return false;
+				}
+				
+				var rnum = system.runOnce("installtmp");
+				var tmpfile = "/tmp/insttmp_" + rnum.toString();
+				var res = system.runOnce("Requirements\ Checker.app/Contents/MacOS/Requirements\ Checker", "-silent", "Default", tmpfile);
+				if( res == 0  )
+				{
+					if( STPCerror == "" )
+					{
+						return true;
+					}
+					else
+					{
+						my.result.message = STPCerror;
+						my.result.type = 'Warn';
+						return false;					
+					}
+				}
+				else if( res == 1 )
+				{
+					var plist = system.files.plistAtPath(tmpfile);
+					my.result.message = plist.RequirementsOutput + "\n" + STPCerror;
+					my.result.type = 'Fatal';
+					return false;
+				}
+				else if( res == 2 )
+				{
+					var plist = system.files.plistAtPath(tmpfile);
+					my.result.message = plist.RequirementsOutput + "\n" + STPCerror;
+					my.result.type = 'Warn';
+					return false;
+				}
+				else if( res == 10 )
+				{
+					var plist = system.files.plistAtPath(tmpfile);
+					my.result.message = system.localizedString('ERROR_REQCHECK') + "\n" + STPCerror;
+					my.result.type = 'Fatal';
+					return false;
+				}
+			}
+			
+			return true;
+		}
+	
+		function installationCheckOLD()
+		{	
+			if ( !checkSystemVersion() )
+			{
+				if (my.result)
+				{
+					my.result.message = system.localizedString('ERROR_OSVER');
+					my.result.type = 'Fatal';
+				}
+				
+				return false;
+			}
+			
+			if ( !checkQTVersion())
+			{
+				if (my.result)
+				{
+					my.result.message = system.localizedString('ERROR_QTVER');
+					my.result.type = 'Fatal';
+				}
+				
+				return false;
+			}
+			
+			return true;
+		}
+
+		function checkSystemVersion()
+		{
+			var path = "/System/Library/CoreServices/SystemVersion.plist";
+			var plist = system.files.plistAtPath(path);
+			
+			if( plist )
+			{
+				var property = plist.ProductVersion;
+				if( property &amp;&amp; (system.compareVersions(property,"10.5.6") &lt; 0) ){ return false; }
+			}
+
+			return true;
+		}
+
+		function checkQTVersion()
+		{
+			var path = "/System/Library/Frameworks/QuickTime.framework/Versions/A/Resources/version.plist";
+			var plist = system.files.plistAtPath(path);
+			
+			if( plist )
+			{
+				var property = plist.CFBundleShortVersionString;
+				if( property &amp;&amp; (system.compareVersions(property,"7.2") &lt; 0) ){ return false; }
+			}
+
+			return true;
+		}
+
+		function volume_check()
+		{
+			if( my.target.mountpoint != '/' &amp;&amp; !system.env.COMMAND_LINE_INSTALL )
+			{
+				my.result.message = system.localizedString('ERROR_VOLUME');
+				my.result.type = 'Fatal';
+
+				return false;
+			}
+			
+			return true;
+		}
+
+		function hasDigidesign() 
+		{
+			var path = my.target.mountpoint + "/Library/Frameworks/DigiStreamManager.framework";
+			var bundle = system.files.bundleAtPath(path);
+			
+			if( bundle &amp;&amp; (system.compareVersions(bundle.CFBundleShortVersionString, "7.0.0") > 0) )
+			{   
+				return true;
+			}
+		
+			return false;
+		}
+
+		function isNotDowngrade()
+		{
+			var action = my.choice.packageUpgradeAction;
+			
+			if( (action == 'downgrade') || (action == 'mixed') )
+			{
+				my.choice.tooltip = system.localizedStringWithFormat('TT_NEWERALREADYINSTALLED');
+				return false;
+			}
+			
+			return true;
+		}
+		
+		function GetBundleFiveTupleVersion( bundle )
+		{
+			if( bundle == null )
+				return null;
+			
+			var shortVers = bundle.CFBundleShortVersionString;
+			shortVers = PadVersion( shortVers, 3 );
+			
+			var sourceVers = bundle.SourceVersion;
+			sourceVers = PadVersion( sourceVers, 1 );
+			
+			var buildVers = bundle.BuildVersion;
+			buildVers = PadVersion( buildVers, 1 );
+			
+			var fiveTupleVers = shortVers + "." + sourceVers + "." + buildVers;
+			return fiveTupleVers;
+		}
+		
+		function PadVersion( version, tupleCount )
+		{
+			if( version == null )
+				version = "0";
+			
+			var components = version.split(".");
+			
+			if( components.length > tupleCount )
+				components = components.slice(0, tupleCount);
+			else
+				for(; components.length&lt;tupleCount; ){ components.push("0"); }
+			
+			return components.join(".");
+		}
+		
+		function isTiger()
+		{
+			return (system.compareVersions(system.version.ProductVersion,"10.4.0") >= 0) &amp;&amp; (system.compareVersions(system.version.ProductVersion,"10.5.0") &lt; 0);
+		}
+		
+		function isLeopard()
+		{
+			return (system.compareVersions(system.version.ProductVersion,"10.5.0") >= 0) &amp;&amp; (system.compareVersions(system.version.ProductVersion,"10.6.0") &lt; 0);
+		}
+
+		
+	</script>
+    <installation-check script='installationCheck()'/>
+    <volume-check script="volume_check()"/>
+    <choices-outline>
+        <line choice="LogicPro"/>
+        <line choice="MainStage"/>
+        <line choice="SoundtrackPro"/>
+        <line choice="WaveBurner"/>
+        <line choice="Compressor"/>
+        <line choice="LogicStudioContent">
+            <line choice="LogicStudioDemoSongs"/>
+            <line choice="LogicStudioCoreContent"/>
+            <line choice="LogicStudioSurroundIRs"/>
+            <line choice="WarpedEffects"/>
+            <line choice="JamPacks">
+                <line choice="GB09Content">
+                    <line choice="GB09Instruments">
+                        <line choice="GB09InstrumentsProHIDDEN"/>
+                        <line choice="GB09InstrumentsHIDDEN"/>
+                    </line>
+                    <line choice="GB09Loops"/>
+                </line>
+                <line choice="JamPack1">
+                    <line choice="JamPack1Instruments">
+                        <line choice="JamPack1InstrumentsProHIDDEN"/>
+                        <line choice="JamPack1InstrumentsHIDDEN"/>
+                        <line choice="JamPack1ProSurroundHIDDEN"/>
+                    </line>
+                    <line choice="JamPack1AppleLoops"/>
+                </line>
+                <line choice="JamPackRemixTools">
+                    <line choice="RemixToolsInstruments">
+                        <line choice="RemixToolsInstrumentsProHIDDEN"/>
+                        <line choice="RemixToolsInstrumentsHIDDEN"/>
+                        <line choice="RemixToolsProSurroundHIDDEN"/>
+                    </line>
+                    <line choice="RemixToolsAppleLoops"/>
+                </line>
+                <line choice="JamPackRhythmSection">
+                    <line choice="RhythmSectionInstruments">
+                        <line choice="RhythmSectionInstrumentsProHIDDEN"/>
+                        <line choice="RhythmSectionInstrumentsHIDDEN"/>
+                        <line choice="RhythmSectionProSurroundHIDDEN"/>
+                    </line>
+                    <line choice="RhythmSectionAppleLoops"/>
+                </line>
+                <line choice="JamPackOrchestral">
+                    <line choice="OrchestralInstruments">
+                        <line choice="OrchestralInstrumentsProHIDDEN"/>
+                        <line choice="OrchestralInstrumentsHIDDEN"/>
+                        <line choice="OrchestralProSurroundHIDDEN"/>
+                    </line>
+                    <line choice="OrchestralAppleLoops"/>
+                </line>
+                <line choice="JamPackWorldMusic">
+                    <line choice="WorldMusicInstruments">
+                        <line choice="WorldMusicInstrumentsProHIDDEN"/>
+                        <line choice="WorldMusicInstrumentsHIDDEN"/>
+                        <line choice="WorldMusicProSurroundHIDDEN"/>
+                    </line>
+                    <line choice="WorldMusicAppleLoops"/>
+                </line>
+                <line choice="JamPackVoices">
+                    <line choice="VoicesInstruments">
+                        <line choice="VoicesInstrumentsProHIDDEN"/>
+                        <line choice="VoicesInstrumentsHIDDEN"/>
+                    </line>
+                    <line choice="VoicesAppleLoops"/>
+                </line>
+            </line>
+            <line choice="SoundtrackProContent">
+                <line choice="SoundtrackProSoundEffects"/>
+                <line choice="SoundtrackProMusicBeds"/>
+                <line choice="SoundtrackProMusicLoops"/>
+            </line>
+            <line choice="XtremeLibrary"/>
+            <line choice="LogicProLegacyContent"/>
+        </line>
+        <line choice="Tools">
+            <line choice="ImpulseResponseUtility"/>
+            <line choice="AppleLoopsUtility"/>
+        </line>
+        <line choice="HardwareSupport">
+            <line choice="ESBEXS24TDM"/>
+            <line choice="UnitorFamilyDrivers"/>
+        </line>
+        <!-- invisible choices for shared components -->
+        <line choice="StereoImpulseResponses"/>
+        <line choice="LogicStudioMisc"/>
+        <line choice="ProRuntime"/>
+        <line choice="XSKey"/>
+    </choices-outline>
+    <choice id="LogicPro" title="TITLE_LOGICPRO" start_enabled='isNotDowngrade()' start_selected='isNotDowngrade()' description='DESCRIPTION_LOGICPRO'>
+        <pkg-ref id='com.apple.pkg.LogicPro' auth='Root' installKBytes="692561" version="9.0.0.1540000.572">file:../Packages/LogicPro.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.LogicNode' auth='Root' installKBytes="92606" version="1.1.0.1540000.572">file:../Packages/LogicNode.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.LogicProContent' auth='Root' installKBytes="14498" version="1.1.0.350000.572">file:../Packages/LogicProContent.pkg</pkg-ref>
+    </choice>
+    <choice id="MainStage" title="TITLE_MAINSTAGE" start_enabled='isNotDowngrade()' start_selected='isNotDowngrade()' description='DESCRIPTION_MAINSTAGE'>
+        <pkg-ref id='com.apple.pkg.MainStage' auth='Root' installKBytes="504699" version="1.0.0.1540000.572">file:../Packages/MainStage.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.MainStageContent' auth='Root' installKBytes="93081" version="1.0.0.350000.572">file:../Packages/MainStageContent.pkg</pkg-ref>
+    </choice>
+    <choice id="SoundtrackPro" title="TITLE_SOUNDTRACKPRO" start_enabled="isNotDowngrade() &amp;&amp; isIntel()" start_selected="isNotDowngrade() &amp;&amp; !shouldNotInstallSTPC() &amp;&amp; isIntel()" description='DESCRIPTION_SOUNDTRACKPRO'>
+        <pkg-ref id='com.apple.pkg.SoundtrackPro' auth='Root' installKBytes="119246" version="3.0.0.3200000.1609">file:../Packages/SoundtrackPro.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.SoundtrackProHelp' auth='Root' installKBytes="113274" version="3.0.0.3200000.1609">file:../Packages/SoundtrackProHelp.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.SoundtrackProSupport' auth='Root' installKBytes="2445" version="3.0.0.3200000.1609">file:../Packages/SoundtrackProSupport.pkg</pkg-ref>
+    </choice>
+    <choice id="WaveBurner" title="TITLE_WAVEBURNER" start_enabled='isNotDowngrade()' start_selected='isNotDowngrade()' description='DESCRIPTION_WAVEBURNER'>
+        <pkg-ref id='com.apple.pkg.WaveBurner' auth='Root' installKBytes="193617" version="1.5.2.1540000.572">file:../Packages/WaveBurner.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.WaveBurnerContent' auth='Root' installKBytes="2718" version="1.0.0.350000.572">file:../Packages/WaveBurnerContent.pkg</pkg-ref>
+    </choice>
+    <choice id="Compressor" title="TITLE_COMPRESSOR" start_enabled="isNotDowngrade() &amp;&amp; isIntel()" start_selected="(isNotDowngrade() || !choices.SoundtrackPro) &amp;&amp; !shouldNotInstallSTPC() &amp;&amp; isIntel()" enabled="isNotDowngrade() &amp;&amp; !choices.SoundtrackPro.selected &amp;&amp; isIntel()" selected="isNotDowngrade() &amp;&amp; (my.choice.selected || choices.SoundtrackPro.selected) &amp;&amp; isIntel()" description='DESCRIPTION_COMPRESSOR'>
+        <pkg-ref id='com.apple.pkg.ProMediaIO' auth='Root' installKBytes="626" version="1.1.0.3200000.1609">file:../Packages/ProMediaIO.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.Compressor' auth='Root' installKBytes="17126" version="3.5.0.3200000.1609">file:../Packages/Compressor.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.CompressorHelp' auth='Root' installKBytes="67138" version="3.5.0.3200000.1609">file:../Packages/CompressorHelp.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.Qmaster' auth='Root' installKBytes="45660" version="3.5.0.3200000.1609">file:../Packages/Qmaster.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.QmasterHelp' auth='Root' installKBytes="18953" version="3.5.0.3200000.1609">file:../Packages/QmasterHelp.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.QadministratorHelp' auth='Root' installKBytes="13582" version="3.5.0.3200000.1609">file:../Packages/QadministratorHelp.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.ProAppsMetadataSupport' auth='Root' installKBytes="155" version="1.1.0.1570000.1851">file:../Packages/ProAppsMetadataSupport.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.PluginManagerStd' auth='Root' installKBytes="846" version="1.7.4.1570000.1851">file:../Packages/PluginManagerStd.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.VideoOutSupport' auth='Root' installKBytes="4548" version="1.5.0.1570000.1851">file:../Packages/VideoOutSupport.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.PSTSharedA' auth='Root' installKBytes="19149" version="1.0.0.1570000.1851">file:../Packages/PSTSharedA.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.AppleHDVCodec' auth='Root' installKBytes="1611" version="1.5.0.1570000.1851">file:../Packages/AppleHDVCodec.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.AppleIntermediateCodec' auth='Root' installKBytes="318" version="1.3.0.1570000.1851">file:../Packages/AppleIntermediateCodec.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.DVCPROHDCodec' auth='Root' installKBytes="537" version="1.5.0.1570000.1851">file:../Packages/DVCPROHDCodec.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.IMXCodec' auth='Root' installKBytes="279" version="1.4.0.1570000.1851">file:../Packages/IMXCodec.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.QuickTimeMPEG2' auth='Root' installKBytes="640" version="7.6.0.1130000.990">file:../Packages/QuickTimeMPEG2.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.Uncompressed422' auth='Root' installKBytes="225" version="1.6.0.1570000.1851">file:../Packages/Uncompressed422.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.BatchMonitorHelp' auth='Root' installKBytes="4776" version="3.5.0.3200000.1609">file:../Packages/BatchMonitorHelp.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.DSPPublishing' auth='Root' installKBytes="179221" version="1.0.0.1570000.1851">file:../Packages/DSPPublishing.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.DSPPublishingTemplates' auth='Root' installKBytes="501643" version="1.0.0.3200000.1609">file:../Packages/DSPPublishingTemplates.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.ProResCodec' auth='Root' installKBytes="1347" version="2.0.0.1570000.1851">file:../Packages/ProResCodec.pkg</pkg-ref>
+    </choice>
+    <choice id="LogicStudioContent" title="TITLE_LOGICSTUDIOCONTENT" description='DESCRIPTION_LOGICSTUDIOCONTENT'></choice>
+    <choice id="LogicStudioDemoSongs" title="TITLE_LOGICSTUDIODEMOSONGS" enabled="isNotDowngrade() &amp;&amp; !choices.LogicPro.selected" selected="isNotDowngrade() &amp;&amp; (my.choice.selected || choices.LogicPro.selected)" description='DESCRIPTION_LOGICSTUDIODEMOSONGS'>
+        <pkg-ref id='com.apple.pkg.LogicStudioDemoSongs' auth='Root' installKBytes="260872" version="1.0.0.350000.572">file:../Packages/LogicStudioDemoSongs.pkg</pkg-ref>
+    </choice>
+    <choice id="LogicStudioCoreContent" title="TITLE_LOGICSTUDIOCORECONTENT" description='DESCRIPTION_LOGICSTUDIOCORECONTENT' enabled="isNotDowngrade() &amp;&amp; !(choices.LogicPro.selected || choices.MainStage.selected)" selected="isNotDowngrade() &amp;&amp; (choices.LogicPro.selected || choices.MainStage.selected || my.choice.selected)">
+        <pkg-ref id='com.apple.pkg.LogicStudioCoreContent' auth='Root' installKBytes="7173090" version="1.1.0.350000.572">file:../Packages/LogicStudioCoreContent.pkg</pkg-ref>
+    </choice>
+    <choice id="LogicStudioSurroundIRs" title="TITLE_LOGICSTUDIOSURROUNDIRS" start_enabled='isNotDowngrade()' start_selected='true' description='DESCRIPTION_LOGICSTUDIOSURROUNDIRS'>
+        <pkg-ref id='com.apple.pkg.SurroundImpulseResponses' auth='Root' installKBytes="876836" version="1.0.0.350000.567">x-disc://Logic%20Studio%20Additional%20Content/Packages/SurroundImpulseResponses.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.LogicStudioSurroundSpaceDesignerFiles' auth='Root' installKBytes="21604" version="1.0.0.350000.567">x-disc://Logic%20Studio%20Additional%20Content/Packages/LogicStudioSurroundSpaceDesignerFiles.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.SoundtrackProSurroundSpaceDesignerPreSets' auth='Root' installKBytes="287" version="1.0.0.350000.567">x-disc://Logic%20Studio%20Additional%20Content/Packages/SoundtrackProSurroundSpaceDesignerPreSets.pkg</pkg-ref>
+    </choice>
+    <choice id="WarpedEffects" title="TITLE_WARPEDEFFECTS" start_enabled='isNotDowngrade()' start_selected='true' description='DESCRIPTION_WARPEDEFFECTS'>
+        <pkg-ref id='com.apple.pkg.WarpedEffects' auth='Root' installKBytes="589149" version="1.0.0.350000.567">x-disc://Logic%20Studio%20Additional%20Content/Packages/WarpedEffects.pkg</pkg-ref>
+    </choice>
+    <choice id="GB09Content" title="TITLE_GB09CONTENT" description='DESCRIPTION_GB09CONTENT'></choice>
+    <choice id="GB09Instruments" title="TITLE_GB09INSTRUMENTS" enabled="isNotDowngrade() &amp;&amp; !GB6orLater() &amp;&amp; !((choices.GB09Loops.selected &amp;&amp; choices.LogicPro.selected) || (choices.JamPack1.selected || choices.JamPackRemixTools.selected || choices.JamPackRhythmSection.selected)) " description='DESCRIPTION_GB09INSTRUMENTS'></choice>
+    <choice id="GB09InstrumentsProHIDDEN" title="TITLE_GB09INSTRUMENTSPRO" selected="(my.choice.selected || (choices.GB09Loops.selected &amp;&amp; choices.LogicPro.selected) || (choices.JamPack1.selected || choices.JamPackRemixTools.selected || choices.JamPackRhythmSection.selected)) &amp;&amp; !GB6orLater()" start_visible="debugMode()">
+        <pkg-ref id='com.apple.pkg.LogicStudioGarageBandProInstruments' auth='Root' installKBytes="1309" version="1.0.0.350000.567">x-disc://Jam%20Pack%20Content%201/Packages/LogicStudioGarageBandProInstruments.pkg</pkg-ref>
+    </choice>
+    <choice id="GB09InstrumentsHIDDEN" title="TITLE_GB09INSTRUMENTS" selected="choices.GB09InstrumentsProHIDDEN.selected &amp;&amp; !GB6orLater()" start_visible="debugMode()">
+        <pkg-ref id='com.apple.pkg.LogicExpressLogicStudioGarageBand09Instruments' auth='Root' installKBytes="1589134" version="1.0.0.350000.567">x-disc://Jam%20Pack%20Content%201/Packages/LogicExpressLogicStudioGarageBand09Instruments.pkg</pkg-ref>
+    </choice>
+    <choice id="GB09Loops" title="TITLE_GB09LOOPS" enabled="isNotDowngrade() &amp;&amp; !GB6orLater() &amp;&amp; !GarageBandThreeFilesPresent()" selected="my.choice.selected &amp;&amp; !GB6orLater() &amp;&amp; !GarageBandThreeFilesPresent()" description='DESCRIPTION_GB09LOOPS'>
+        <pkg-ref id='com.apple.pkg.LogicExpressLogicStudioGarageBand09Loops' auth='Root' installKBytes="503172" version="1.0.0.350000.567">x-disc://Jam%20Pack%20Content%201/Packages/LogicExpressLogicStudioGarageBand09Loops.pkg</pkg-ref>
+    </choice>
+    <choice id="JamPacks" title="TITLE_JAMPACKS" description='DESCRIPTION_JAMPACKS'></choice>
+    <choice id="JamPack1" title="TITLE_JAMPACKONE" description='DESCRIPTION_JAMPACKONE'></choice>
+    <choice id="JamPack1Instruments" title="TITLE_JAMPACKONEINSTRUMENTS" start_enabled='isNotDowngrade()' start_selected='isNotDowngrade()' enabled="!(choices.JamPack1AppleLoops.selected &amp;&amp; choices.LogicPro.selected)" description='DESCRIPTION_JAMPACKONEINSTRUMENTS'></choice>
+    <choice id="JamPack1InstrumentsProHIDDEN" title="JamPack1InstrumentsProHIDDEN" selected="my.choice.selected || (choices.JamPack1AppleLoops.selected &amp;&amp; choices.LogicPro.selected)" start_visible="debugMode()">
+        <pkg-ref id='com.apple.pkg.JamPackOnePro' auth='Root' installKBytes="1514" version="1.0.0.350000.567">x-disc://Jam%20Pack%20Content%201/Packages/JamPackOnePro.pkg</pkg-ref>
+    </choice>
+    <choice id="JamPack1InstrumentsHIDDEN" title="JamPack1InstrumentsHIDDEN" selected="choices.JamPack1InstrumentsProHIDDEN.selected &amp;&amp; !JamPack1InstrumentsExists()" start_visible="debugMode()">
+        <pkg-ref id='com.apple.pkg.JamPackOneInstruments' auth='Root' installKBytes="598307" version="1.0.0.60000.567">x-disc://Jam%20Pack%20Content%201/Packages/JamPackOneInstruments.pkg</pkg-ref>
+    </choice>
+    <choice id="JamPack1ProSurroundHIDDEN" title="JamPack1ProSurroundHIDDEN" selected="choices.JamPack1InstrumentsProHIDDEN.selected &amp;&amp; choices.LogicStudioSurroundIRs.selected" start_visible="debugMode()">
+        <pkg-ref id='com.apple.pkg.JamPackOneProSurround' auth='Root' installKBytes="78" version="1.0.0.350000.567">x-disc://Jam%20Pack%20Content%201/Packages/JamPackOneProSurround.pkg</pkg-ref>
+    </choice>
+    <choice id="JamPack1AppleLoops" title="TITLE_JAMPACKONEAPPLELOOPS" enabled="isNotDowngrade() &amp;&amp; (!JamPack1LoopsExists() || JamPack1LoopsLS1Exists())" start_selected="isNotDowngrade() &amp;&amp; !JamPack1LoopsExists() &amp;&amp; !JamPack1LoopsLS1Exists()" customLocation='/Library/Audio/Apple Loops/Apple/' customLocationAllowAlternateVolumes='YES' description='DESCRIPTION_JAMPACKONEAPPLELOOPS'>
+        <pkg-ref id='com.apple.pkg.JamPackOneLoopsALAC' auth='Root' installKBytes="911334" version="1.0.0.60000.567">x-disc://Jam%20Pack%20Content%201/Packages/JamPackOneLoopsALAC.pkg</pkg-ref>
+    </choice>
+    <choice id="JamPackRemixTools" title="TITLE_JAMPACKREMIXTOOLS" description='DESCRIPTION_JAMPACKREMIXTOOLS'></choice>
+    <choice id="RemixToolsInstruments" title="TITLE_REMIXTOOLSINSTRUMENTS" start_enabled='isNotDowngrade()' start_selected='isNotDowngrade()' enabled="!(choices.RemixToolsAppleLoops.selected &amp;&amp; choices.LogicPro.selected)" description='DESCRIPTION_REMIXTOOLSINSTRUMENTS'></choice>
+    <choice id="RemixToolsInstrumentsProHIDDEN" title="RemixToolsInstrumentsProHIDDEN" selected="my.choice.selected || (choices.RemixToolsAppleLoops.selected &amp;&amp; choices.LogicPro.selected)" start_visible="debugMode()">
+        <pkg-ref id='com.apple.pkg.JamPackRemixToolsPro' auth='Root' installKBytes="2684" version="1.0.0.350000.567">x-disc://Jam%20Pack%20Content%201/Packages/JamPackRemixToolsPro.pkg</pkg-ref>
+    </choice>
+    <choice id="RemixToolsInstrumentsHIDDEN" title="RemixToolsInstrumentsHIDDEN" selected="choices.RemixToolsInstrumentsProHIDDEN.selected &amp;&amp; !RemixToolsInstrumentsExists()" start_visible="debugMode()">
+        <pkg-ref id='com.apple.pkg.JamPackRemixToolsInstruments' auth='Root' installKBytes="687233" version="1.0.0.60000.567">x-disc://Jam%20Pack%20Content%201/Packages/JamPackRemixToolsInstruments.pkg</pkg-ref>
+    </choice>
+    <choice id="RemixToolsProSurroundHIDDEN" title="RemixToolsProSurroundHIDDEN" selected="choices.RemixToolsInstrumentsProHIDDEN.selected &amp;&amp; choices.LogicStudioSurroundIRs.selected" start_visible="debugMode()">
+        <pkg-ref id='com.apple.pkg.JamPackRemixToolsProSurround' auth='Root' installKBytes="396" version="1.0.0.350000.567">x-disc://Jam%20Pack%20Content%201/Packages/JamPackRemixToolsProSurround.pkg</pkg-ref>
+    </choice>
+    <choice id="RemixToolsAppleLoops" title="TITLE_REMIXTOOLSAPPLELOOPS" enabled="isNotDowngrade() &amp;&amp; (!RemixToolsLoopsExists() || RemixToolsLS1LoopsExists())" start_selected="isNotDowngrade() &amp;&amp; !RemixToolsLoopsExists() &amp;&amp; !RemixToolsLS1LoopsExists()" customLocation='/Library/Audio/Apple Loops/Apple/' customLocationAllowAlternateVolumes='YES' description='DESCRIPTION_REMIXTOOLSAPPLELOOPS'>
+        <pkg-ref id='com.apple.pkg.JamPackRemixToolsLoopsALAC' auth='Root' installKBytes="1027085" version="1.0.0.60000.567">x-disc://Jam%20Pack%20Content%201/Packages/JamPackRemixToolsLoopsALAC.pkg</pkg-ref>
+    </choice>
+    <choice id="JamPackRhythmSection" title="TITLE_JAMPACKRYTHMSECTION" description='DESCRIPTION_JAMPACKRYTHMSECTION'></choice>
+    <choice id="RhythmSectionInstruments" title="TITLE_RHYTHMSECTIONINSTRUMENTS" start_enabled='isNotDowngrade()' start_selected='isNotDowngrade()' enabled="!(choices.RhythmSectionAppleLoops.selected &amp;&amp; choices.LogicPro.selected)" description='DESCRIPTION_RHYTHMSECTIONINSTRUMENTS'></choice>
+    <choice id="RhythmSectionInstrumentsProHIDDEN" title="RhythmSectionInstrumentsProHIDDEN" selected="my.choice.selected || (choices.RhythmSectionAppleLoops.selected &amp;&amp; choices.LogicPro.selected)" start_visible="debugMode()">
+        <pkg-ref id='com.apple.pkg.JamPackRhythmSectionPro' auth='Root' installKBytes="4021" version="1.0.0.350000.566">x-disc://Jam%20Pack%20Content%202/Packages/JamPackRhythmSectionPro.pkg</pkg-ref>
+    </choice>
+    <choice id="RhythmSectionInstrumentsHIDDEN" title="RhythmSectionInstrumentsHIDDEN" selected="choices.RhythmSectionInstrumentsProHIDDEN.selected &amp;&amp; !RhythmSectionInstrumentsExists()" start_visible="debugMode()">
+        <pkg-ref id='com.apple.pkg.JamPackRhythmSectionInstruments' auth='Root' installKBytes="2648831" version="1.0.0.60000.566">x-disc://Jam%20Pack%20Content%202/Packages/JamPackRhythmSectionInstruments.pkg</pkg-ref>
+    </choice>
+    <choice id="RhythmSectionProSurroundHIDDEN" title="RhythmSectionProSurroundHIDDEN" selected="choices.RhythmSectionInstrumentsProHIDDEN.selected &amp;&amp; choices.LogicStudioSurroundIRs.selected" start_visible="debugMode()">
+        <pkg-ref id='com.apple.pkg.JamPackRhythmSectionProSurround' auth='Root' installKBytes="158" version="1.0.0.350000.566">x-disc://Jam%20Pack%20Content%202/Packages/JamPackRhythmSectionProSurround.pkg</pkg-ref>
+    </choice>
+    <choice id="RhythmSectionAppleLoops" title="TITLE_RHYTHMSECTIONAPPLELOOPS" enabled="isNotDowngrade() &amp;&amp; (!RhythmSectionLoopsExists() || RhythmSectionLS1LoopsExists())" start_selected="isNotDowngrade() &amp;&amp; !RhythmSectionLoopsExists() &amp;&amp; !RhythmSectionLS1LoopsExists()" customLocation='/Library/Audio/Apple Loops/Apple/' customLocationAllowAlternateVolumes='YES' description='DESCRIPTION_RHYTHMSECTIONAPPLELOOPS'>
+        <pkg-ref id='com.apple.pkg.JamPackRhythmSectionLoopsALAC' auth='Root' installKBytes="890150" version="1.0.0.60000.566">x-disc://Jam%20Pack%20Content%202/Packages/JamPackRhythmSectionLoopsALAC.pkg</pkg-ref>
+    </choice>
+    <choice id="JamPackOrchestral" title="TITLE_JAMPACKORCHESTRAL" description='DESCRIPTION_JAMPACKORCHESTRAL'></choice>
+    <choice id="OrchestralInstruments" title="TITLE_ORCHESTRALINSTRUMENTS" start_enabled='isNotDowngrade()' start_selected='isNotDowngrade()' enabled="!(choices.OrchestralAppleLoops.selected &amp;&amp; choices.LogicPro.selected)" description='DESCRIPTION_ORCHESTRALINSTRUMENTS'></choice>
+    <choice id="OrchestralInstrumentsProHIDDEN" title="OrchestralInstrumentsProHIDDEN" selected="my.choice.selected || (choices.OrchestralAppleLoops.selected &amp;&amp; choices.LogicPro.selected)" start_visible="debugMode()">
+        <pkg-ref id='com.apple.pkg.JamPackOrchestralPro' auth='Root' installKBytes="6026" version="1.0.0.350000.566">x-disc://Jam%20Pack%20Content%202/Packages/JamPackOrchestralPro.pkg</pkg-ref>
+    </choice>
+    <choice id="OrchestralInstrumentsHIDDEN" title="OrchestralInstrumentsHIDDEN" selected="choices.OrchestralInstrumentsProHIDDEN.selected &amp;&amp; !OrchestralInstrumentsExists()" start_visible="debugMode()">
+        <pkg-ref id='com.apple.pkg.JamPackOrchestralInstruments' auth='Root' installKBytes="3090993" version="1.0.0.60000.566">x-disc://Jam%20Pack%20Content%202/Packages/JamPackOrchestralInstruments.pkg</pkg-ref>
+    </choice>
+    <choice id="OrchestralProSurroundHIDDEN" title="OrchestralProSurroundHIDDEN" selected="choices.OrchestralInstrumentsProHIDDEN.selected &amp;&amp; choices.LogicStudioSurroundIRs.selected" start_visible="debugMode()">
+        <pkg-ref id='com.apple.pkg.JamPackOrchestralProSurround' auth='Root' installKBytes="271" version="1.0.0.350000.566">x-disc://Jam%20Pack%20Content%202/Packages/JamPackOrchestralProSurround.pkg</pkg-ref>
+    </choice>
+    <choice id="OrchestralAppleLoops" title="TITLE_ORCHESTRALAPPLELOOPS" enabled="isNotDowngrade() &amp;&amp; (!OrchestralLoopsExists() || OrchestralLS1LoopsExists())" start_selected="isNotDowngrade() &amp;&amp; !OrchestralLoopsExists() &amp;&amp; !OrchestralLS1LoopsExists()" customLocation='/Library/Audio/Apple Loops/Apple/' customLocationAllowAlternateVolumes='YES' description='DESCRIPTION_ORCHESTRALAPPLELOOPS'>
+        <pkg-ref id='com.apple.pkg.JamPackOrchestralLoopsALAC' auth='Root' installKBytes="1306134" version="1.0.0.60000.566">x-disc://Jam%20Pack%20Content%202/Packages/JamPackOrchestralLoopsALAC.pkg</pkg-ref>
+    </choice>
+    <choice id="JamPackWorldMusic" title="TITLE_JAMPACKWORLDMUSIC" description='DESCRIPTION_JAMPACKWORLDMUSIC'></choice>
+    <choice id="WorldMusicInstruments" title="TITLE_WORLDMUSICINSTRUMENTS" start_enabled='isNotDowngrade()' start_selected='isNotDowngrade()' enabled="!(choices.WorldMusicAppleLoops.selected &amp;&amp; choices.LogicPro.selected)" description='DESCRIPTION_WORLDMUSICINSTRUMENTS'></choice>
+    <choice id="WorldMusicInstrumentsProHIDDEN" title="WorldMusicInstrumentsProHIDDEN" selected="my.choice.selected || (choices.WorldMusicAppleLoops.selected &amp;&amp; choices.LogicPro.selected)" start_visible="debugMode()">
+        <pkg-ref id='com.apple.pkg.JamPackWorldMusicPro' auth='Root' installKBytes="3208" version="1.0.0.350000.566">x-disc://Jam%20Pack%20Content%203/Packages/JamPackWorldMusicPro.pkg</pkg-ref>
+    </choice>
+    <choice id="WorldMusicInstrumentsHIDDEN" title="WorldMusicInstrumentsHIDDEN" selected="choices.WorldMusicInstrumentsProHIDDEN.selected &amp;&amp; !WorldMusicInstrumentsExists()" start_visible="debugMode()">
+        <pkg-ref id='com.apple.pkg.JamPackWorldMusicInstruments' auth='Root' installKBytes="3967683" version="1.0.0.60000.566">x-disc://Jam%20Pack%20Content%203/Packages/JamPackWorldMusicInstruments.pkg</pkg-ref>
+    </choice>
+    <choice id="WorldMusicProSurroundHIDDEN" title="WorldMusicProSurroundHIDDEN" selected="choices.WorldMusicInstrumentsProHIDDEN.selected &amp;&amp; choices.LogicStudioSurroundIRs.selected" start_visible="debugMode()">
+        <pkg-ref id='com.apple.pkg.JamPackWorldMusicProSurround' auth='Root' installKBytes="1245" version="1.0.0.350000.566">x-disc://Jam%20Pack%20Content%203/Packages/JamPackWorldMusicProSurround.pkg</pkg-ref>
+    </choice>
+    <choice id="WorldMusicAppleLoops" title="TITLE_WORLDMUSICAPPLELOOPS" enabled="isNotDowngrade() &amp;&amp; (!WorldMusicLoopsExists() || WorldMusicLS1LoopsExists())" start_selected="isNotDowngrade() &amp;&amp; !WorldMusicLoopsExists() &amp;&amp; !WorldMusicLS1LoopsExists()" customLocation='/Library/Audio/Apple Loops/Apple/' customLocationAllowAlternateVolumes='YES' description='DESCRIPTION_WORLDMUSICAPPLELOOPS'>
+        <pkg-ref id='com.apple.pkg.JamPackWorldMusicLoopsALAC' auth='Root' installKBytes="1274293" version="1.0.0.60000.566">x-disc://Jam%20Pack%20Content%203/Packages/JamPackWorldMusicLoopsALAC.pkg</pkg-ref>
+    </choice>
+    <choice id="JamPackVoices" title="TITLE_JAMPACKVOICES" description='DESCRIPTION_JAMPACKVOICES'></choice>
+    <choice id="VoicesInstruments" title="TITLE_VOICESINSTRUMENTS" start_enabled='isNotDowngrade()' start_selected='isNotDowngrade()' enabled="!(choices.VoicesAppleLoops.selected &amp;&amp; choices.LogicPro.selected)" description='DESCRIPTION_VOICESINSTRUMENTS'></choice>
+    <choice id="VoicesInstrumentsProHIDDEN" title="VoicesInstrumentsProHIDDEN" selected="my.choice.selected || (choices.VoicesAppleLoops.selected &amp;&amp; choices.LogicPro.selected)" start_visible="debugMode()">
+        <pkg-ref id='com.apple.pkg.JamPackVoicesPro' auth='Root' installKBytes="1818" version="1.0.0.350000.566">x-disc://Jam%20Pack%20Content%203/Packages/JamPackVoicesPro.pkg</pkg-ref>
+    </choice>
+    <choice id="VoicesInstrumentsHIDDEN" title="VoicesInstrumentsHIDDEN" selected="choices.VoicesInstrumentsProHIDDEN.selected &amp;&amp; !VoicesInstrumentsExists()" start_visible="debugMode()">
+        <pkg-ref id='com.apple.pkg.JamPackVoicesInstruments' auth='Root' installKBytes="682350" version="1.0.0.60000.566">x-disc://Jam%20Pack%20Content%203/Packages/JamPackVoicesInstruments.pkg</pkg-ref>
+    </choice>
+    <choice id="VoicesAppleLoops" title="TITLE_VOICESAPPLELOOPS" enabled="isNotDowngrade() &amp;&amp; !VoicesLoopsExists()" selected="isNotDowngrade() &amp;&amp; !VoicesLoopsExists() &amp;&amp; choices.VoicesAppleLoops.selected" customLocation='/Library/Audio/Apple Loops/Apple/' customLocationAllowAlternateVolumes='YES' description='DESCRIPTION_VOICESAPPLELOOPS'>
+        <pkg-ref id='com.apple.pkg.JamPackVoicesLoopsALAC' auth='Root' installKBytes="804014" version="1.0.0.60000.566">x-disc://Jam%20Pack%20Content%203/Packages/JamPackVoicesLoopsALAC.pkg</pkg-ref>
+    </choice>
+    <choice id="SoundtrackProContent" title="TITLE_SOUNDTRACKCONTENT" description='DESCRIPTION_SOUNDTRACKCONTENT' start_selected='isNotDowngrade()' customLocation='/Library/Audio/Apple Loops/Apple/' customLocationAllowAlternateVolumes='YES'></choice>
+    <choice id="SoundtrackProSoundEffects" title="TITLE_SOUNDTRACKSOUNDEFFECTS" enabled='isNotDowngrade()' description='DESCRIPTION_SOUNDTRACKSOUNDEFFECTS' selected="my.choice.selected &amp;&amp; isNotDowngrade()">
+        <pkg-ref id='com.apple.pkg.AudioContentforSoundtrackPro1A' auth='Root' installKBytes="2924999" version="1.0.0.240000.91">x-disc://Audio%20Content%201/Installer/AudioContentforSoundtrackPro.mpkg/Contents/Packages/AudioContentforSoundtrackPro1A.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.AudioContentforSoundtrackPro1B' auth='Root' installKBytes="2845146" version="1.0.0.240000.91">x-disc://Audio%20Content%201/Installer/AudioContentforSoundtrackPro.mpkg/Contents/Packages/AudioContentforSoundtrackPro1B.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.AudioContentforSoundtrackPro1C' auth='Root' installKBytes="2612901" version="1.0.0.240000.91">x-disc://Audio%20Content%201/Installer/AudioContentforSoundtrackPro.mpkg/Contents/Packages/AudioContentforSoundtrackPro1C.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.AudioContentforSoundtrackPro2A' auth='Root' installKBytes="2936678" version="1.0.0.240000.89">x-disc://Audio%20Content%202/Installer/AudioContentforSoundtrackPro2A.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.AudioContentforSoundtrackPro2B' auth='Root' installKBytes="2951908" version="1.0.0.240000.89">x-disc://Audio%20Content%202/Installer/AudioContentforSoundtrackPro2B.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.AudioContentforSoundtrackPro3' auth='Root' installKBytes="2018541" version="1.0.0.240000.89">x-disc://Audio%20Content%202/Installer/AudioContentforSoundtrackPro3.pkg</pkg-ref>
+    </choice>
+    <choice id="SoundtrackProMusicBeds" title="TITLE_SOUNDTRACKMUSICBEDS" enabled='isNotDowngrade()' description='DESCRIPTION_SOUNDTRACKMUSICBEDS' selected="my.choice.selected &amp;&amp; isNotDowngrade()">
+        <pkg-ref id='com.apple.pkg.AudioContentforSoundtrackPro5A' auth='Root' installKBytes="2997422" version="1.0.0.240000.89">x-disc://Audio%20Content%203/Installer/AudioContentforSoundtrackPro5A.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.AudioContentforSoundtrackPro5B' auth='Root' installKBytes="2856659" version="1.0.0.240000.89">x-disc://Audio%20Content%203/Installer/AudioContentforSoundtrackPro5B.pkg</pkg-ref>
+    </choice>
+    <choice id="SoundtrackProMusicLoops" title="TITLE_SOUNDTRACKMUSICLOOPS" start_enabled='isNotDowngrade()' description='DESCRIPTION_SOUNDTRACKMUSICLOOPS' start_selected='true'>
+        <pkg-ref id='com.apple.pkg.AudioContentforSoundtrackPro7' auth='Root' installKBytes="1622905" version="1.0.0.240000.89">x-disc://Audio%20Content%203/Installer/AudioContentforSoundtrackPro7.pkg</pkg-ref>
+    </choice>
+    <choice id="XtremeLibrary" title="TITLE_XTREMELIBRARY" enabled="isNotDowngrade() &amp;&amp; !(choices.LogicStudioSurroundIRs.selected)" selected='my.choice.selected || choices.LogicStudioSurroundIRs.selected' description='DESCRIPTION_XTREMELIBRARY'>
+        <pkg-ref id='com.apple.pkg.XtremeLibrary' auth='Root' installKBytes="477735" version="1.0.0.350000.567">x-disc://Logic%20Studio%20Additional%20Content/Packages/XtremeLibrary.pkg</pkg-ref>
+    </choice>
+    <choice id="LogicProLegacyContent" title="TITLE_LOGICPROLEGACYCONTENT" start_enabled='isNotDowngrade()' start_selected='oldLogicPro() || oldLogicExpress()' description='DESCRIPTION_LOGICPROLEGACYCONTENT'>
+        <pkg-ref id='com.apple.pkg.LogicStudioLegacyContent' auth='Root' installKBytes="969771" version="1.0.0.350000.567">x-disc://Logic%20Studio%20Additional%20Content/Packages/LogicStudioLegacyContent.pkg</pkg-ref>
+    </choice>
+    <choice id="Tools" title="TITLE_TOOLS" description='DESCRIPTION_TOOLS'></choice>
+    <choice id="AppleLoopsUtility" title="TITLE_APPLELOOPSUTILITY" start_enabled='isNotDowngrade()' start_selected='isNotDowngrade()' enabled="isNotDowngrade() &amp;&amp; !(choices.LogicPro.selected || choices.SoundtrackPro.selected)" selected="isNotDowngrade() &amp;&amp; (choices.LogicPro.selected || choices.SoundtrackPro.selected || my.choice.selected)" description='DESCRIPTION_APPLELOOPSUTILITY'>
+        <pkg-ref id='com.apple.pkg.AppleLoopsUtility' auth='Root' installKBytes="22998" version="3.0.0.3200000.1609">file:../Packages/AppleLoopsUtility.pkg</pkg-ref>
+    </choice>
+    <choice id="ImpulseResponseUtility" title="TITLE_IMPULSERESPONSEUTILITY" start_enabled='isNotDowngrade()' start_selected='isNotDowngrade()' description='DESCRIPTION_IMPULSERESPONSEUTILITY'>
+        <pkg-ref id='com.apple.pkg.ImpulseResponseUtility' auth='Root' installKBytes="16372" version="9.0.0.1540000.572">file:../Packages/ImpulseResponseUtility.pkg</pkg-ref>
+    </choice>
+    <choice id="HardwareSupport" title="TITLE_HARDWARESUPPORT" description='DESCRIPTION_HARDWARESUPPORT'></choice>
+    <choice id="ESBEXS24TDM" title="TITLE_ESBEX24TDM" start_enabled="isNotDowngrade() &amp;&amp; hasDigidesign()" start_selected="my.choice.enabled &amp;&amp; isNotDowngrade()" selected="my.choice.enabled &amp;&amp; hasDigidesign()" description='DESCRIPTION_ESBEX24TDM'>
+        <pkg-ref id='com.apple.pkg.TDMESBEXS' auth='Root' installKBytes="1682" version="2.2.0.1540000.572">file:../Packages/TDMESBEXS.pkg</pkg-ref>
+    </choice>
+    <choice id="UnitorFamilyDrivers" title="TITLE_UNITORFAMILYDRIVERS" start_enabled='isNotDowngrade()' start_selected='true' description='DESCRIPTION_UNITORFAMILYDRIVERS'>
+        <pkg-ref id='com.apple.pkg.UnitorMIDIDriver' auth='Root' installKBytes="292" version="2.0.0.1540000.572">file:../Packages/UnitorMIDIDriver.pkg</pkg-ref>
+    </choice>
+    <!-- Invisible shared or special components -->
+    <choice id="StereoImpulseResponses" title="StereoImpulseResponses" start_visible="debugMode()" selected="isNotDowngrade() &amp;&amp; (choices.LogicPro.selected || choices.MainStage.selected || choices.WaveBurner.selected || choices.SoundtrackPro.selected)">
+        <pkg-ref id='com.apple.pkg.StereoImpulseResponses' auth='Root' installKBytes="319837" version="1.0.0.350000.572">file:../Packages/StereoImpulseResponses.pkg</pkg-ref>
+    </choice>
+    <choice id="ProRuntime" title="ProRuntime" start_visible="debugMode()" selected="isNotDowngrade() &amp;&amp; (choices.LogicPro.selected || choices.MainStage.selected || choices.WaveBurner.selected || choices.SoundtrackPro.selected || choices.AppleLoopsUtility.selected || choices.ImpulseResponseUtility.selected || choices.Compressor.selected) &amp;&amp; isLeopard()">
+        <pkg-ref id='com.apple.pkg.ProRuntime' auth='Root' installKBytes="94887" version="5.0.0.902300.1506">file:../Packages/ProRuntime.pkg</pkg-ref>
+    </choice>
+    <choice id="LogicStudioMisc" title="LogicStudioMisc" start_visible='debugMode()' selected="isNotDowngrade() &amp;&amp; (choices.LogicPro.selected || choices.SoundtrackPro.selected || choices.MainStage.selected || choices.WaveBurner.selected || choices.Compressor.selected || choices.AppleLoopsUtility.selected || choices.ImpulseResponseUtility.selected)">
+        <pkg-ref id='com.apple.pkg.LogicStudioMisc' auth='Root' installKBytes="62" version="1.0.0.350000.572">file:../Packages/LogicStudioMisc.pkg</pkg-ref>
+    </choice>
+    <choice id="XSKey" title="XSKey" start_visible='debugMode()' selected="isNotDowngrade() &amp;&amp; (choices.LogicPro.selected || choices.SoundtrackPro.selected || choices.MainStage.selected || choices.WaveBurner.selected || choices.Compressor.selected)">
+        <pkg-ref id='com.apple.pkg.XSKey' auth='Root' installKBytes="920" version="1.0.0.1570000.1851">file:../Packages/XSKey.pkg</pkg-ref>
+    </choice>
+    <pkg-ref id='com.apple.mpkg.LogicStudio' auth='Root'>.</pkg-ref>
+</installer-gui-script>
