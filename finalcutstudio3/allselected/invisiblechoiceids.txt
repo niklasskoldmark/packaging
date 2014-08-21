@@ -1,0 +1,1 @@
+    <choice id="MotionInstalledMedia2" title="TITLE_MOTIONINSTALLEDMEDIA2" selected="!system.env.COMMAND_LINE_INSTALL &amp;&amp; (choices.MotionInstalledMedia.selected || choices.MotionContentTemplates.selected)" start_visible='false'>

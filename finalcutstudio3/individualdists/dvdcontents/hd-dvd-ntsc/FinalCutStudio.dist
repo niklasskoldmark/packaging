@@ -1,0 +1,406 @@
+<?xml version="1.0"?>
+<installer-gui-script minSpecVersion='1.0040'>
+    <platforms>
+        <client arch="i386,ppc"/>
+    </platforms>
+    <options hostArchitectures='i386,ppc'/>
+    <title>TITLE_DIST</title>
+    <welcome file='Welcome.rtf'/>
+    <license file='License.rtf'/>
+    <background file='background.tif'/>
+    <background scaling='tofit'/>
+    <background alignment='topleft'/>
+    <options customize='always'/>
+    <options allow-external-scripts='yes'/>
+    <options mpkg='com.apple.mpkg.FinalCutStudio'/>
+    <script>
+	
+		function oldDSPContent()
+		{
+			var rnum = system.runOnce("DSPContentChecker");
+			if( rnum == 1 ){ return true; }
+			return false;
+		}
+	
+		function installationCheck()
+		{
+			if( !system.env.COMMAND_LINE_INSTALL )
+			{
+				if( !isIntel() )
+				{
+					my.result.message = system.localizedString('ERROR_INTEL');
+					my.result.type = 'Fatal';
+					return false;
+				}
+				
+				if( system.compareVersions(system.version.ProductVersion,"10.5.6") &lt; 0 )
+				{
+					my.result.message = system.localizedString('ERROR_OSVER');
+					my.result.type = 'Fatal';
+					return false;
+				}
+				
+				var rnum = system.runOnce("installtmp");
+				var tmpfile = "/tmp/insttmp_" + rnum.toString();
+				var res = system.runOnce("Requirements\ Checker.app/Contents/MacOS/Requirements\ Checker", "-silent", "Default", tmpfile);
+				if( res == 0  )
+				{
+					return true;
+				}
+				else if( res == 1 )
+				{
+					var plist = system.files.plistAtPath(tmpfile);
+					my.result.message = plist.RequirementsOutput;
+					my.result.type = 'Fatal';
+					return false;
+				}
+				else if( res == 2 )
+				{
+					var plist = system.files.plistAtPath(tmpfile);
+					my.result.message = plist.RequirementsOutput;
+					my.result.type = 'Warn';
+					return false;
+				}
+				else if( res == 10 )
+				{
+					var plist = system.files.plistAtPath(tmpfile);
+					my.result.message = system.localizedString('ERROR_REQCHECK');
+					my.result.type = 'Fatal';
+					return false;
+				}
+			}
+			
+			my.result.message = "";
+			return true;
+		}
+
+		function volume_check()
+		{
+			if( my.target.mountpoint != '/' &amp;&amp; !system.env.COMMAND_LINE_INSTALL )
+			{
+				my.result.message = system.localizedString('ERROR_VOLUME');
+				my.result.type = 'Fatal';
+				return false;
+			}
+			
+			return true;
+		}
+
+		function isIntel()
+		{
+			return (system.sysctl('hw.byteorder') == '1234');
+		}
+
+		function isLeopard()
+		{
+			return (system.compareVersions(system.version.ProductVersion,"10.5.0") >= 0) &amp;&amp; (system.compareVersions(system.version.ProductVersion,"10.6.0") &lt; 0);
+		}
+		
+		function isNotDowngrade()
+		{
+			var action = my.choice.packageUpgradeAction;
+			
+			if( (action == 'downgrade') || (action == 'mixed') )
+			{
+				my.choice.tooltip = system.localizedStringWithFormat('TT_NEWERALREADYINSTALLED');
+				return false;
+			}
+			
+			return true;
+		}
+		
+		function iDVDPresent( )
+		{
+			var app = my.target.mountpoint + '/Applications/iDVD.app';
+			if( app )
+			{
+				var appBundle = system.files.bundleAtPath(app);
+				if( appBundle ){ return true; }
+			}
+			my.choice.tooltip = system.localizedStringWithFormat("IDVDPATCHES_TOOLTIP");
+			return false;
+		}
+				
+		function AppRange(lower, upper, apps)
+		{
+			for( var i = 0; i &lt; apps.length; i++ )
+			{
+				var app= '/Applications/' + apps[i] + '.app';
+				var appBundle = system.files.bundleAtPath(app);
+				
+				if( appBundle )
+				{
+					var appVersion = GetBundleFiveTupleVersion(appBundle);
+					if( appBundle &amp;&amp; (system.compareVersions(appVersion, lower) >= 0) &amp;&amp; (system.compareVersions(appVersion, upper) &lt; 0) ){ return true; }
+				}
+			}
+			
+			return false;
+		}
+
+		function AppRangeOrNotPresent(lower, upper, apps )
+		{
+			if( AppRange(lower, upper, apps) ){ return true; }
+			
+			var res = false;
+			
+			for( var i = 0; i &lt; apps.length; i++ )
+			{
+				var app= '/Applications/' + apps[i] + '.app';
+				var appBundle = system.files.bundleAtPath(app);
+				
+				if( appBundle )
+				{
+					return false;
+				}
+			}
+			
+			return true;
+		}
+
+		function AppHigherThanRange(lower, apps)
+		{
+			for( var i = 0; i &lt; apps.length; i++ )
+			{
+				var app= '/Applications/' + apps[i] + '.app';
+				var appBundle = system.files.bundleAtPath(app);
+				
+				if( appBundle )
+				{
+					var appVersion = GetBundleFiveTupleVersion(appBundle);
+					if( appBundle &amp;&amp; (system.compareVersions(appVersion, lower) >= 0) ){ return true; }
+				}
+			}
+			
+			return false;
+		}
+
+		function HigherThan(lower, bundle)
+		{
+			var appBundle = system.files.bundleAtPath(my.target.mountpoint + bundle);
+			var appVersion = GetBundleFiveTupleVersion(appBundle);
+			if(appBundle &amp;&amp; (system.compareVersions(appVersion, lower) >= 0) ){ return true; } return false;
+		}
+
+		function Range(lower,upper, bundle)
+		{
+			var appBundle = system.files.bundleAtPath(my.target.mountpoint + bundle);
+			var appVersion = GetBundleFiveTupleVersion(appBundle);
+			if(appBundle &amp;&amp; (system.compareVersions(appVersion, lower) >= 0) &amp;&amp; (system.compareVersions(appVersion, upper) &lt; 0)){ return true; } return false;
+		}
+		
+		function GetBundleFiveTupleVersion(bundle)
+		{
+			if( bundle == null ){ return null; }
+			var shortVers = bundle.CFBundleShortVersionString;
+			shortVers = PadVersion(shortVers, 3);
+			var sourceVers = bundle.SourceVersion;
+			sourceVers = PadVersion(sourceVers, 1);
+			var buildVers = bundle.BuildVersion;
+			buildVers = PadVersion(buildVers, 1);
+			var fiveTupleVers = shortVers + "." + sourceVers + "." + buildVers;
+			return fiveTupleVers;
+		}
+
+		function PadVersion(version, tupleCount)
+		{
+			if (version == null){ version = "0"; }
+			var components = version.split(".");
+			if (components.length > tupleCount){	components = components.slice(0, tupleCount); }
+			else{ for(; components.length&lt;tupleCount; ){ components.push("0"); }	}
+			return components.join(".");
+		}
+		
+	</script>
+    <installation-check script='installationCheck()'/>
+    <volume-check script="volume_check()"/>
+    <choices-outline>
+        <line choice="FCPApp"/>
+        <line choice="Color"/>
+        <line choice="MotionGroup">
+            <line choice="MotionApp"/>
+            <line choice="MotionContentGroupings">
+                <line choice="MotionContentTemplates"/>
+                <line choice="MotionInstalledMedia"/>
+                <line choice="MotionInstalledMedia2"/>
+            </line>
+            <line choice="MotionLiveFonts"/>
+        </line>
+        <line choice="SoundtrackProGroup">
+            <line choice="SoundtrackProApp"/>
+            <line choice="SurroundImpulseResponseFiles"/>
+            <line choice="SoundtrackProContent">
+                <line choice="SoundtrackProSoundEffects"/>
+                <line choice="SoundtrackProMusicBeds"/>
+                <line choice="SoundtrackProMusicLoops"/>
+            </line>
+        </line>
+        <line choice="Compressor"/>
+        <line choice="DSPGroup">
+            <line choice="DSPApp"/>
+            <line choice="DSPContentGroup">
+                <line choice="NTSCTemplates">
+                    <line choice="HDDVDNTSC"/>
+                    <line choice="SDDVDNTSC"/>
+                </line>
+                <line choice="PALTemplates">
+                    <line choice="HDDVDPAL"/>
+                    <line choice="SDDVDPAL"/>
+                </line>
+            </line>
+            <line choice="iDVDPatches"/>
+        </line>
+        <line choice="AppleQmaster"/>
+        <line choice="CTApp"/>
+        <!-- invisible choices for shared components -->
+        <line choice="SharedComponents"/>
+        <line choice="ProAppsEffects"/>
+        <line choice="ProCore"/>
+        <line choice="ProRuntime"/>
+        <line choice="SoundtrackProSupport"/>
+        <line choice="ProMediaIO"/>
+        <!-- -->
+        <line choice="XSKey"/>
+    </choices-outline>
+    <choice id="FCPApp" title="TITLE_FCP" start_enabled='!AppHigherThanRange("1.0.0.0.0", new Array("Final Cut Pro"))' start_selected='true' description="DESCRIPTION_FCP">
+        <pkg-ref id='com.apple.pkg.FinalCutPro' auth='Root' installKBytes="104794" version="7.0.0.3200000.1609">file:../Packages/FinalCutPro.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.FinalCutProHelp' auth='Root' installKBytes="362312" version="7.0.0.3200000.1609">file:../Packages/FinalCutProHelp.pkg</pkg-ref>
+        <pkg-ref id='com.borisfx.CalligraphyLangPack' auth='Root' installKBytes="1367" version="1.0.0.1.0">file:../Packages/CalligraphyLangPack.pkg</pkg-ref>
+        <pkg-ref id='com.borisfx.CalligraphyPresets' auth='Root' installKBytes="17288" version="2.1.0.2.1">file:../Packages/CalligraphyPresets.pkg</pkg-ref>
+        <pkg-ref id='com.borisfx.CalligraphyPlugins' auth='Root' installKBytes="129467" version="2.1.0.2.1">file:../Packages/CalligraphyPlugins.pkg</pkg-ref>
+    </choice>
+    <choice id="Color" title="TITLE_COLOR" start_enabled='!AppHigherThanRange("1.0.0.0.0", new Array("Color"))' start_selected='true' description="DESCRIPTION_COLOR">
+        <pkg-ref id='com.apple.pkg.Color' auth='Root' installKBytes="25572" version="1.5.0.3200000.1609">file:../Packages/Color.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.ColorHelp' auth='Root' installKBytes="67588" version="1.5.0.3200000.1609">file:../Packages/ColorHelp.pkg</pkg-ref>
+    </choice>
+    <choice id="MotionGroup" title="TITLE_MOTION" description='DESCRIPTION_MOTION' start_enabled='!AppHigherThanRange("1.0.0.0.0", new Array("Motion"))'></choice>
+    <choice id="MotionApp" title="TITLE_MOTIONAPP" start_enabled='!AppHigherThanRange("1.0.0.0.0", new Array("Motion"))' start_selected='true' description='DESCRIPTION_MOTIONAPP'>
+        <pkg-ref id='com.apple.pkg.Motion' auth='Root' installKBytes="161538" version="4.0.0.3200000.1609">file:../Packages/Motion.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.MotionHelp' auth='Root' installKBytes="272787" version="4.0.0.3200000.1609">file:../Packages/MotionHelp.pkg</pkg-ref>
+    </choice>
+    <choice id='MotionContentGroupings' customLocation='/Library/Application Support/Final Cut Studio/Motion/' customLocationAllowAlternateVolumes='YES' start_selected='true' title='TITLE_MOTIONCONTENT' description='DESCRIPTION_MOTIONCONTENT'></choice>
+    <choice id="MotionContentTemplates" title="TITLE_MOTIONCONTENTTEMPLATES" start_selected='true' description="DESCRIPTION_MOTIONCONTENTTEMPLATES">
+        <pkg-ref id='com.apple.pkg.MotionContentTemplates' auth='Root' installKBytes="1738905" version="1.5.0.3140000.1590">file:../Packages/MotionContentTemplates.pkg</pkg-ref>
+    </choice>
+    <choice id="MotionInstalledMedia" title="TITLE_MOTIONINSTALLEDMEDIA" start_selected='true' description="DESCRIPTION_MOTIONINSTALLEDMEDIA">
+        <pkg-ref id='com.apple.pkg.MotionInstalledMedia1' auth='Root' installKBytes="2225353" version="1.5.0.3140000.1590">file:../Packages/MotionInstalledMedia1.pkg</pkg-ref>
+    </choice>
+    <choice id="MotionInstalledMedia2" title="TITLE_MOTIONINSTALLEDMEDIA2" selected="!system.env.COMMAND_LINE_INSTALL &amp;&amp; (choices.MotionInstalledMedia.selected || choices.MotionContentTemplates.selected)" start_visible='false'>
+        <pkg-ref id='com.apple.pkg.MotionInstalledMedia2' auth='Root' installKBytes="4132134" version="1.5.0.3140000.1590">file:../Packages/MotionInstalledMedia2.pkg</pkg-ref>
+    </choice>
+    <choice id="MotionLiveFonts" title="TITLE_MOTIONLIVEFONTS" customLocation='/Library/Application Support/' customLocationAllowAlternateVolumes='YES' start_selected='true' description="DESCRIPTION_MOTIONLIVEFONTS">
+        <pkg-ref id='com.apple.pkg.MotionSeriesLiveFonts' auth='Root' installKBytes="1252062" version="4.0.0.3140000.1590">file:../Packages/MotionSeriesLiveFonts.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.CollectorsSeriesLiveFonts' auth='Root' installKBytes="1874246" version="4.0.0.3140000.1590">file:../Packages/CollectorsSeriesLiveFonts.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.ProSeriesLiveFonts' auth='Root' installKBytes="5151537" version="4.0.0.3140000.1590">file:../Packages/ProSeriesLiveFonts.pkg</pkg-ref>
+    </choice>
+    <choice id="SoundtrackProGroup" title="TITLE_SOUNDTRACK" description='DESCRIPTION_SOUNDTRACK' start_enabled='!AppHigherThanRange("1.0.0.0.0", new Array("Soundtrack Pro"))'></choice>
+    <choice id="SoundtrackProApp" title="TITLE_SOUNDTRACKAPP" start_enabled='!AppHigherThanRange("1.0.0.0.0", new Array("Soundtrack Pro"))' start_selected='true' description='DESCRIPTION_SOUNDTRACKAPP'>
+        <pkg-ref id='com.apple.pkg.SoundtrackPro' auth='Root' installKBytes="119246" version="3.0.0.3200000.1609">file:../Packages/SoundtrackPro.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.SoundtrackProHelp' auth='Root' installKBytes="113274" version="3.0.0.3200000.1609">file:../Packages/SoundtrackProHelp.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.AppleLoopsUtility' auth='Root' installKBytes="22998" version="3.0.0.3200000.1609">file:../Packages/AppleLoopsUtility.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.StereoImpulseResponses' auth='Root' installKBytes="319837" version="1.0.0.20000.1609">file:../Packages/StereoImpulseResponses.pkg</pkg-ref>
+    </choice>
+    <choice id="SurroundImpulseResponseFiles" title="TITLE_SURROUNDIMPULSERESPONSEFILES" description='DESCRIPTION_SURROUNDIMPULSERESPONSEFILES'>
+        <pkg-ref id='com.apple.pkg.SurroundImpulseResponses' auth='Root' installKBytes="876836" version="1.0.0.20000.1609">file:../Packages/SurroundImpulseResponses.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.SoundtrackProSurroundSpaceDesignerPreSets' auth='Root' installKBytes="288" version="1.0.0.20000.1609">file:../Packages/SoundtrackProSurroundSpaceDesignerPreSets.pkg</pkg-ref>
+    </choice>
+    <choice id="SoundtrackProContent" title="TITLE_SOUNDTRACKCONTENT" description='DESCRIPTION_SOUNDTRACKCONTENT' start_selected='true' customLocation='/Library/Audio/Apple Loops/Apple/' customLocationAllowAlternateVolumes='YES'></choice>
+    <choice id="SoundtrackProSoundEffects" title="TITLE_SOUNDTRACKSOUNDEFFECTS" description='DESCRIPTION_SOUNDTRACKSOUNDEFFECTS' start_selected='true'>
+        <pkg-ref id='com.apple.pkg.AudioContentforSoundtrackPro1A' auth='Root' installKBytes="2929051" version="1.1.0.260000.97">file:../Packages/AudioContentforSoundtrackPro1A.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.AudioContentforSoundtrackPro1B' auth='Root' installKBytes="2849051" version="1.1.0.260000.97">file:../Packages/AudioContentforSoundtrackPro1B.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.AudioContentforSoundtrackPro1C' auth='Root' installKBytes="2616500" version="1.1.0.260000.97">file:../Packages/AudioContentforSoundtrackPro1C.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.AudioContentforSoundtrackPro2A' auth='Root' installKBytes="2941592" version="1.1.0.260000.97">file:../Packages/AudioContentforSoundtrackPro2A.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.AudioContentforSoundtrackPro2B' auth='Root' installKBytes="2956582" version="1.1.0.260000.97">file:../Packages/AudioContentforSoundtrackPro2B.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.AudioContentforSoundtrackPro3' auth='Root' installKBytes="2033642" version="1.1.0.260000.97">file:../Packages/AudioContentforSoundtrackPro3.pkg</pkg-ref>
+    </choice>
+    <choice id="SoundtrackProMusicBeds" title="TITLE_SOUNDTRACKMUSICBEDS" description='DESCRIPTION_SOUNDTRACKMUSICBEDS' start_selected='true'>
+        <pkg-ref id='com.apple.pkg.AudioContentforSoundtrackPro5A' auth='Root' installKBytes="3001525" version="1.1.0.260000.97">file:../Packages/AudioContentforSoundtrackPro5A.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.AudioContentforSoundtrackPro5B' auth='Root' installKBytes="2860639" version="1.1.0.260000.97">file:../Packages/AudioContentforSoundtrackPro5B.pkg</pkg-ref>
+    </choice>
+    <choice id="SoundtrackProMusicLoops" title="TITLE_SOUNDTRACKMUSICLOOPS" description='DESCRIPTION_SOUNDTRACKMUSICLOOPS' start_selected='true'>
+        <pkg-ref id='com.apple.pkg.AudioContentforSoundtrackPro7' auth='Root' installKBytes="1638189" version="1.1.0.260000.97">file:../Packages/AudioContentforSoundtrackPro7.pkg</pkg-ref>
+    </choice>
+    <choice id="Compressor" enabled="!AppHigherThanRange(&quot;1.0.0.0.0&quot;, new Array(&quot;Compressor&quot;)) &amp;&amp; !choices.SoundtrackProApp.selected &amp;&amp; !choices.DSPApp.selected &amp;&amp; !choices.FCPApp.selected &amp;&amp; !choices.MotionApp.selected" selected="(my.choice.selected || choices.SoundtrackProApp.selected || choices.DSPApp.selected || choices.FCPApp.selected || choices.MotionApp.selected) &amp;&amp; AppRangeOrNotPresent(&quot;1.0.0.0.0&quot;, &quot;3.5.1.0.0&quot;, new Array(&quot;Compressor&quot;))" title="TITLE_COMPRESSOR" tooltip='TOOLTIP_COMPRESSORREQ' description='DESCRIPTION_COMPRESSOR'>
+        <pkg-ref id='com.apple.pkg.Compressor' auth='Root' installKBytes="17126" version="3.5.0.3200000.1609">file:../Packages/Compressor.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.CompressorHelp' auth='Root' installKBytes="67138" version="3.5.0.3200000.1609">file:../Packages/CompressorHelp.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.Qmaster' auth='Root' installKBytes="45660" version="3.5.0.3200000.1609">file:../Packages/Qmaster.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.QmasterHelp' auth='Root' installKBytes="18953" version="3.5.0.3200000.1609">file:../Packages/QmasterHelp.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.QadministratorHelp' auth='Root' installKBytes="13582" version="3.5.0.3200000.1609">file:../Packages/QadministratorHelp.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.BatchMonitorHelp' auth='Root' installKBytes="4776" version="3.5.0.3200000.1609">file:../Packages/BatchMonitorHelp.pkg</pkg-ref>
+    </choice>
+    <choice id="DSPGroup" title="TITLE_DSP" description='DESCRIPTION_DSP' start_enabled='!AppHigherThanRange("1.0.0.0.0", new Array("DVD Studio Pro"))'></choice>
+    <choice id="DSPContentGroup" title="TITLE_DSPCONTENT" description='DESCRIPTION_DSPCONTENT' start_selected='true' customLocation='/Library/Application Support/Final Cut Studio/DVD Studio Pro/' customLocationAllowAlternateVolumes='YES'></choice>
+    <choice id="DSPApp" title="TITLE_DSPAPP" start_enabled='!AppHigherThanRange("1.0.0.0.0", new Array("DVD Studio Pro"))' start_selected='true' description='DESCRIPTION_DSPAPP'>
+        <pkg-ref id='com.apple.pkg.DVDStudioPro' auth='Root' installKBytes="74940" version="4.2.2.3200000.1609">file:../Packages/DVDStudioPro.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.DVDStudioProHelp' auth='Root' installKBytes="48891" version="4.2.2.3200000.1609">file:../Packages/DVDStudioProHelp.pkg</pkg-ref>
+    </choice>
+    <choice id="NTSCTemplates" title="TITLE_NTSCTEMPLATES" start_selected='true' description='DESCRIPTION_NTSCTEMPLATES'></choice>
+    <choice id="HDDVDNTSC" title="TITLE_HDDVDNTSC" start_selected='true' description='DESCRIPTION_HDDVDNTSC'>
+        <pkg-ref id='com.apple.pkg.HDDVDNTSC' auth='Root' installKBytes="1955771" version="1.0.0.170000.68">file:../Packages/HDDVDNTSC.pkg</pkg-ref>
+    </choice>
+    <choice id="HDDVDPAL" title="TITLE_HDDVDPAL" start_selected='true' description='DESCRIPTION_HDDVDPAL'>
+        <pkg-ref id='com.apple.pkg.HDDVDPAL' auth='Root' installKBytes="1937974" version="1.0.0.170000.68">file:../Packages/HDDVDPAL.pkg</pkg-ref>
+    </choice>
+    <choice id="PALTemplates" title="TITLE_PALTEMPLATES" start_selected='true' description='DESCRIPTION_PALTEMPLATES'></choice>
+    <choice id="SDDVDNTSC" title="TITLE_SDDVDNTSC" start_selected='true' description='DESCRIPTION_SDDVDNTSC'>
+        <pkg-ref id='com.apple.pkg.SDDVDNTSC' auth='Root' installKBytes="2576723" version="1.0.0.170000.68">file:../Packages/SDDVDNTSC.pkg</pkg-ref>
+    </choice>
+    <choice id="SDDVDPAL" title="TITLE_SDDVDPAL" start_selected='true' description='DESCRIPTION_SDDVDPAL'>
+        <pkg-ref id='com.apple.pkg.SDDVDPAL' auth='Root' installKBytes="2413788" version="1.0.0.170000.68">file:../Packages/SDDVDPAL.pkg</pkg-ref>
+    </choice>
+    <choice id="iDVDPatches" title="TITLE_IDVDPATCHES" start_enabled='true' start_selected='true' selected="my.choice.selected &amp;&amp; iDVDPresent()" description='DESCRIPTION_IDVDPATCHES'>
+        <pkg-ref id='com.apple.pkg.iDVDPatches' auth='Root' installKBytes="8715" version="4.2.2.3200000.1609">file:../Packages/iDVDPatches.pkg</pkg-ref>
+    </choice>
+    <choice id="AppleQmaster" enabled="!AppHigherThanRange(&quot;1.0.0.0.0&quot;, new Array(&quot;Apple Qmaster&quot;)) &amp;&amp; !choices.SoundtrackProApp.selected &amp;&amp; !choices.DSPApp.selected &amp;&amp; !choices.FCPApp.selected &amp;&amp; !choices.MotionApp.selected &amp;&amp; !choices.Compressor.selected" selected="(my.choice.selected || choices.SoundtrackProApp.selected || choices.DSPApp.selected || choices.FCPApp.selected || choices.MotionApp.selected || choices.Compressor.selected) &amp;&amp; AppRangeOrNotPresent(&quot;1.0.0.0.0&quot;, &quot;3.5.1.0.0&quot;, new Array(&quot;Apple Qmaster&quot;))" title="TITLE_QMASTER" tooltip='TOOLTIP_QMASTERREQ' description="DESCRIPTION_QMASTER">
+        <pkg-ref id='com.apple.pkg.Qmaster' auth='Root' installKBytes="45660" version="3.5.0.3200000.1609">file:../Packages/Qmaster.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.QmasterHelp' auth='Root' installKBytes="18953" version="3.5.0.3200000.1609">file:../Packages/QmasterHelp.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.QadministratorHelp' auth='Root' installKBytes="13582" version="3.5.0.3200000.1609">file:../Packages/QadministratorHelp.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.BatchMonitorHelp' auth='Root' installKBytes="4776" version="3.5.0.3200000.1609">file:../Packages/BatchMonitorHelp.pkg</pkg-ref>
+    </choice>
+    <choice id="CTApp" title="TITLE_CINEMATOOLS" enabled="!AppHigherThanRange(&quot;1.0.0.0.0&quot;, new Array(&quot;Cinema Tools&quot;)) &amp;&amp; !choices.Color.selected" selected="(my.choice.selected || choices.Color.selected) &amp;&amp; AppRangeOrNotPresent(&quot;1.0.0.0.0&quot;, &quot;4.5.1.0.0&quot;, new Array(&quot;Cinema Tools&quot;))" description='DESCRIPTION_CINEMATOOLS'>
+        <pkg-ref id='com.apple.pkg.CinemaTools' auth='Root' installKBytes="28537" version="4.5.0.3200000.1609">file:../Packages/CinemaTools.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.CinemaToolsHelp' auth='Root' installKBytes="24096" version="4.5.0.3200000.1609">file:../Packages/CinemaToolsHelp.pkg</pkg-ref>
+    </choice>
+    <!--
+		invisible choices for shared components.  these software might be installed by way of another pro app,
+		so grouping them separately (and making them install if the dependent proapp is installed) will allow
+		them to install the pro app, while making sure downgrades of the shared pieces are prevented.
+    -->
+    <choice id="SharedComponents" title="SharedComponents" start_visible="false" selected="my.choice.enabled &amp;&amp; (choices.FCPApp.selected || choices.SoundtrackProApp.selected || choices.MotionApp.selected || choices.DSPApp.selected || choices.Color.selected || choices.Compressor.selected || choices.AppleQmaster.selected || choices.CTApp.selected)">
+        <pkg-ref id='com.apple.pkg.FinalCutStudioDocs' auth='Root' installKBytes="19" version="1.0.0.3200000.1609">file:../Packages/FinalCutStudioDocs.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.PSTSharedA' auth='Root' installKBytes="19149" version="1.0.0.1570000.1851">file:../Packages/PSTSharedA.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.AppleHDVCodec' auth='Root' installKBytes="1611" version="1.5.0.1570000.1851">file:../Packages/AppleHDVCodec.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.AppleIntermediateCodec' auth='Root' installKBytes="318" version="1.3.0.1570000.1851">file:../Packages/AppleIntermediateCodec.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.DSPPublishing' auth='Root' installKBytes="179221" version="1.0.0.1570000.1851">file:../Packages/DSPPublishing.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.DSPPublishingTemplates' auth='Root' installKBytes="501643" version="1.0.0.3200000.1609">file:../Packages/DSPPublishingTemplates.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.DVCPROHDCodec' auth='Root' installKBytes="537" version="1.5.0.1570000.1851">file:../Packages/DVCPROHDCodec.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.IMXCodec' auth='Root' installKBytes="279" version="1.4.0.1570000.1851">file:../Packages/IMXCodec.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.LiveTypeSupportStd' auth='Root' installKBytes="131" version="2.1.4.1570000.1851">file:../Packages/LiveTypeSupportStd.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.PluginManagerStd' auth='Root' installKBytes="846" version="1.7.4.1570000.1851">file:../Packages/PluginManagerStd.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.ProAppsMetadataSupport' auth='Root' installKBytes="155" version="1.1.0.1570000.1851">file:../Packages/ProAppsMetadataSupport.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.ProResCodec' auth='Root' installKBytes="1347" version="2.0.0.1570000.1851">file:../Packages/ProResCodec.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.QuickTimeMPEG2' auth='Root' installKBytes="640" version="7.6.0.1130000.990">file:../Packages/QuickTimeMPEG2.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.Uncompressed422' auth='Root' installKBytes="225" version="1.6.0.1570000.1851">file:../Packages/Uncompressed422.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.VideoOutSupport' auth='Root' installKBytes="4548" version="1.5.0.1570000.1851">file:../Packages/VideoOutSupport.pkg</pkg-ref>
+        <pkg-ref id='com.apple.pkg.AVCIntraCodec' auth='Root' installKBytes="196" version="1.0.0.1570000.1851">file:../Packages/AVCIntraCodec.pkg</pkg-ref>
+    </choice>
+    <choice id="ProAppsEffects" title="ProAppsEffects" start_visible="false" selected="my.choice.enabled &amp;&amp; (choices.FCPApp.selected || choices.MotionApp.selected)">
+        <pkg-ref id='com.apple.pkg.ProAppsEffectsA' auth='Root' installKBytes="7299" version="1.0.3.3200000.1609">file:../Packages/ProAppsEffectsA.pkg</pkg-ref>
+    </choice>
+    <choice id="ProCore" title="ProCore" start_visible="false" selected="my.choice.enabled &amp;&amp; (choices.FCPApp.selected || choices.MotionApp.selected)">
+        <pkg-ref id='com.apple.pkg.ProCoreA' auth='Root' installKBytes="1775" version="4.0.0.3200000.1609">file:../Packages/ProCoreA.pkg</pkg-ref>
+    </choice>
+    <choice id="ProRuntime" title="ProRuntime" start_visible="false" selected="my.choice.enabled &amp;&amp; (choices.FCPApp.selected || choices.SoundtrackProApp.selected || choices.MotionApp.selected || choices.DSPApp.selected || choices.Color.selected || choices.Compressor.selected || choices.AppleQmaster.selected || choices.CTApp.selected) &amp;&amp; isLeopard()">
+        <pkg-ref id='com.apple.pkg.ProRuntime' auth='Root' installKBytes="94887" version="5.0.0.902300.1506">file:../Packages/ProRuntime.pkg</pkg-ref>
+    </choice>
+    <choice id="SoundtrackProSupport" title="SoundtrackProSupport" start_visible="false" selected="my.choice.enabled &amp;&amp; (choices.FCPApp.selected || choices.SoundtrackProApp.selected)">
+        <pkg-ref id='com.apple.pkg.SoundtrackProSupport' auth='Root' installKBytes="2445" version="3.0.0.3200000.1609">file:../Packages/SoundtrackProSupport.pkg</pkg-ref>
+    </choice>
+    <choice id="ProMediaIO" title="ProMediaIO" start_visible="false" selected="my.choice.enabled &amp;&amp; (choices.FCPApp.selected || choices.Compressor.selected || choices.AppleQmaster.selected)">
+        <pkg-ref id='com.apple.pkg.ProMediaIO' auth='Root' installKBytes="626" version="1.1.0.3200000.1609">file:../Packages/ProMediaIO.pkg</pkg-ref>
+    </choice>
+    <choice id="XSKey" title="XSKey" start_visible="false" selected='true'>
+        <pkg-ref id='com.apple.pkg.XSKey' auth='Root' installKBytes="920" version="1.0.0.1570000.1851">file:../Packages/XSKey.pkg</pkg-ref>
+    </choice>
+    <pkg-ref id='com.apple.mpkg.FinalCutStudio' auth='Root'>.</pkg-ref>
+</installer-gui-script>
